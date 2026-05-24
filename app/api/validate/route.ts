@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth } from "@/lib/firebase-admin";
-import { validateIdea } from "@/lib/anthropic";
+import { validateIdea } from "@/lib/gemini";
 import { saveValidation, canValidate, incrementUsage } from "@/lib/firestore";
 
 export async function POST(req: NextRequest) {

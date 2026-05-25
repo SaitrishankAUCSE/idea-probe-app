@@ -2,22 +2,20 @@
    PRICING PAGE — app/pricing/page.tsx
    ============================================
    
-   🎓 TEACHING NOTES:
-   
-   The full pricing page. It builds on the PricingPreview
-   we used on the landing page, but adds more detail and FAQs.
+   The full pricing page with Razorpay checkout integration.
    
    This is a client component because the buttons need to trigger
    different actions based on auth state:
    - Not logged in → redirect to /signup
    - Logged in (Free plan clicking Free) → Go to /validate
-   - Logged in (clicking Pro) → Trigger Stripe Checkout
+   - Logged in (clicking Pro) → Trigger Razorpay Checkout popup
    
-   Stripe Checkout flow:
+   Razorpay Checkout flow:
    1. User clicks "Upgrade"
-   2. We POST to /api/stripe/checkout
-   3. API creates a Stripe Session URL and returns it
-   4. We redirect the user to that URL
+   2. We POST to /api/razorpay/create-order
+   3. API creates a Razorpay Order and returns order details
+   4. We open the Razorpay popup with order details
+   5. On successful payment, we verify via /api/razorpay/verify
    ============================================ */
 
 "use client";
@@ -32,7 +30,7 @@ import { Footer } from "@/components/Footer";
 const plans = [
   {
     name: "Free",
-    price: "$0",
+    price: "₹0",
     period: "forever",
     description: "Perfect for testing the waters",
     features: [
@@ -46,7 +44,7 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "$9",
+    price: "₹900",
     period: "/month",
     description: "For serious founders building real products",
     features: [
@@ -56,7 +54,7 @@ const plans = [
       "Save & compare ideas",
       "Priority analysis",
     ],
-    priceId: "pro", // Maps to STRIPE_PRO_PRICE_ID in backend
+    priceId: "pro",
     popular: true,
   },
 ];
@@ -68,17 +66,35 @@ const faqs = [
   },
   {
     q: "How does the AI search the web?",
-    a: "We use Claude 3.5 Sonnet equipped with a real-time web search tool. It actively searches for your specific idea, finds live competitors, and extracts market data on the fly.",
+    a: "We use Gemini AI equipped with Google Search grounding. It actively searches for your specific idea, finds live competitors, and extracts market data on the fly.",
   },
   {
     q: "Can I cancel anytime?",
-    a: "Yes. You can manage your subscription or cancel anytime from your dashboard. No questions asked.",
+    a: "Yes. You can manage your subscription or cancel anytime. Contact support@ideaprobe.io and we'll handle it immediately. No questions asked.",
   },
   {
     q: "What's in the PDF report?",
     a: "The Pro plan includes a downloadable PDF containing your full scorecard, competitor links, risk mitigation strategies, and an executive summary. Perfect for sharing with co-founders or investors.",
   },
+  {
+    q: "How are payments processed?",
+    a: "All payments are securely processed through Razorpay, India's leading payment gateway. We support UPI, cards, net banking, and wallets.",
+  },
 ];
+
+/* Load Razorpay checkout script dynamically */
+const loadRazorpay = (): Promise<boolean> =>
+  new Promise((resolve) => {
+    if ((window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
 
 export default function PricingPage() {
   const router = useRouter();
@@ -99,26 +115,55 @@ export default function PricingPage() {
       return;
     }
 
-    // If selecting pro, start Stripe Checkout
+    // If selecting pro, start Razorpay Checkout
     setLoadingPlan(priceId);
     try {
+      const loaded = await loadRazorpay();
+      if (!loaded) {
+        alert("Failed to load payment gateway. Please try again.");
+        return;
+      }
+
       const token = await user.getIdToken();
-      const res = await fetch("/api/stripe/checkout", {
+      const res = await fetch("/api/razorpay/create-order", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
-      
       const data = await res.json();
-      
-      if (data.url) {
-        // Redirect to Stripe's hosted checkout page
-        window.location.href = data.url;
-      } else {
-        throw new Error(data.error || "Failed to create checkout session");
-      }
+
+      const options = {
+        key: data.key,
+        amount: data.amount,
+        currency: data.currency,
+        name: "IdeaProbe",
+        description: "Pro Plan — Unlimited Validations",
+        order_id: data.orderId,
+        handler: async (response: any) => {
+          // Verify payment on server
+          const verifyRes = await fetch("/api/razorpay/verify", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(response),
+          });
+          if (verifyRes.ok) {
+            router.push("/dashboard?upgraded=true");
+          } else {
+            alert("Payment verification failed. Please contact support@ideaprobe.io.");
+          }
+        },
+        prefill: { email: user.email || "" },
+        theme: { color: "#16A34A" },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
     } catch (err) {
       console.error("Checkout error:", err);
       alert("Failed to start checkout. Please try again.");
+    } finally {
       setLoadingPlan(null);
     }
   };
@@ -144,7 +189,7 @@ export default function PricingPage() {
               key={plan.name}
               className={`relative glass rounded-3xl p-8 sm:p-10 transition-all duration-300 ${
                 plan.popular
-                  ? "border-primary/40 ring-1 ring-primary/20 shadow-[0_0_40px_rgba(19,106,183,0.1)] scale-100 md:scale-105 z-10"
+                  ? "border-primary/40 ring-1 ring-primary/20 shadow-[0_0_40px_rgba(22,163,74,0.1)] scale-100 md:scale-105 z-10"
                   : "border-border"
               }`}
             >
@@ -186,7 +231,7 @@ export default function PricingPage() {
                 disabled={loadingPlan !== null}
                 className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 ${
                   plan.popular
-                    ? "gradient-primary text-white hover:shadow-[0_0_30px_rgba(19,106,183,0.4)] hover:scale-[1.02]"
+                    ? "gradient-primary text-white hover:shadow-[0_0_30px_rgba(22,163,74,0.4)] hover:scale-[1.02]"
                     : "glass text-foreground hover:bg-border-hover"
                 }`}
               >

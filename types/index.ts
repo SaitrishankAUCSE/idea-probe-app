@@ -13,7 +13,7 @@
  * WHERE THESE TYPES ARE USED:
  *   - Firestore documents mirror UserProfile and ValidationDoc
  *   - The Anthropic Claude response is parsed into ValidationResult
- *   - Stripe integration references UserProfile.plan and UserProfile.stripeCustomerId
+ *   - Razorpay integration references UserProfile.plan and UserProfile.razorpayCustomerId
  *
  * DESIGN DECISIONS:
  *   - We use `interface` (not `type`) for object shapes because interfaces
@@ -38,9 +38,9 @@
  *     'pro' users get unlimited. This is checked on EVERY validation attempt
  *   - `validationsThisMonth`: Counter for rate limiting free users. Gets
  *     reset at month boundaries (see resetMonthlyUsage in firestore.ts)
- *   - `stripeCustomerId`: Optional because free users haven't paid yet.
- *     When a user upgrades, Stripe creates a customer and we store the ID
- *     here so we can manage their subscription later
+ *   - `razorpayCustomerId`: Optional because free users haven't paid yet.
+ *     When a user upgrades via Razorpay checkout, we store the payment ID
+ *     here so we can reference their transaction later
  *   - `createdAt` / `updatedAt`: Audit trail. Firestore's serverTimestamp()
  *     guarantees these are set by Google's servers, not the client's clock
  */
@@ -55,8 +55,8 @@ export interface UserProfile {
   /** How many validations the user has run this calendar month */
   validationsThisMonth: number;
 
-  /** Stripe customer ID — only set after user interacts with Stripe checkout */
-  stripeCustomerId?: string;
+  /** Razorpay payment ID — only set after user completes Razorpay checkout */
+  razorpayCustomerId?: string;
 
   /**
    * Firestore Timestamp — typed as `any` because:

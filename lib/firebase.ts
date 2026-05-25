@@ -29,7 +29,7 @@
  * with `NEXT_PUBLIC_`. This is a security feature:
  *   - `NEXT_PUBLIC_FIREBASE_API_KEY` → available in browser JS ✅
  *   - `FIREBASE_PRIVATE_KEY` → server-only, never reaches browser ✅
- *   - `STRIPE_SECRET_KEY` → server-only, never reaches browser ✅
+ *   - `RAZORPAY_KEY_SECRET` → server-only, never reaches browser ✅
  *
  * Despite the name, Firebase API keys are NOT secret. They're project
  * identifiers (like a public phone number), not access credentials.

@@ -120,7 +120,7 @@ export const adminAuth = getAuth();
  *
  * USE CASES:
  *   - API routes that need to write data on behalf of users
- *   - Stripe webhooks that update user plans
+ *   - Razorpay webhooks that update user plans
  *   - Background jobs that reset monthly usage counters
  *   - Admin operations that span multiple users' data
  *

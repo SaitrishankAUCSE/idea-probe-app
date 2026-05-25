@@ -1,108 +1,54 @@
 @import "tailwindcss";
 
-/* ============================================
-   IdeaProbe Design System
-   ============================================
-   
-   WHY THIS FILE MATTERS:
-   This is the single source of truth for every color, 
-   font, shadow, and animation in the app. When you see 
-   `bg-primary` or `text-foreground` in any component, 
-   it traces back to a variable defined HERE.
-   
-   HOW TAILWIND v4 WORKS:
-   Tailwind v4 uses `@theme` blocks to define design tokens.
-   These tokens become utility classes automatically:
-   --color-primary → bg-primary, text-primary, border-primary
-   --font-sans → font-sans
-   ============================================ */
-
-/* --- CSS Custom Properties (Design Tokens) --- 
-   These are the raw values. The @theme block below
-   maps them into Tailwind utility classes. */
-
 :root {
-  /* Brand Colors - from the IdeaProbe brand spec */
-  --primary: #136AB7;           /* Trust, authority — used for CTAs, links */
-  --primary-light: #1a7fd4;     /* Hover state */
-  --primary-dark: #0f5694;      /* Active/pressed state */
+  --primary: #16A34A;           /* Green 600 */
+  --primary-light: #22C55E;     /* Green 500 */
+  --primary-dark: #15803D;      /* Green 700 */
   
-  --accent: #8B5CF6;            /* Purple accent — secondary actions */
-  --accent-light: #A78BFA;
+  --accent: #059669;            /* Emerald 600 */
   
-  --light-fill: #E1CDF2;        /* Subtle purple tint — card backgrounds */
-  --light-fill-muted: #F0E6FA;  /* Even softer — section backgrounds */
+  --success: #16A34A;
+  --danger: #DC2626;
+  --warning: #F59E0B;
   
-  --success: #10E575;           /* Green — good scores, positive signals */
-  --success-dark: #0BC462;
+  --background: #FFFFFF;
+  --background-secondary: #F9FAFB;
+  --background-tertiary: #F3F4F6;
   
-  --danger: #E24B4B;            /* Red — risks, warnings, bad scores */
-  --danger-dark: #C93C3C;
+  --foreground: #111827;
+  --foreground-secondary: #6B7280;
+  --foreground-tertiary: #9CA3AF;
   
-  --warning: #F59E0B;           /* Amber — medium scores, caution */
+  --border: #E5E7EB;
+  --border-hover: #D1D5DB;
   
-  /* Neutral Palette */
-  --background: #0D0F12;        /* Deep dark — main background */
-  --background-secondary: #151820; /* Slightly lighter — cards, panels */
-  --background-tertiary: #1C1F2A; /* Even lighter — hover states */
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   
-  --foreground: #F1F3F7;        /* Primary text — bright white */
-  --foreground-secondary: #9CA3B0; /* Secondary text — muted */
-  --foreground-tertiary: #5A6275;  /* Tertiary — hints, placeholders */
-  
-  --border: #252836;            /* Subtle borders */
-  --border-hover: #363B4D;      /* Borders on hover */
-  
-  /* Glassmorphism — that frosted glass effect */
-  --glass-bg: rgba(21, 24, 32, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  
-  /* Glow effects for premium feel */
-  --glow-primary: 0 0 20px rgba(19, 106, 183, 0.3);
-  --glow-accent: 0 0 20px rgba(139, 92, 246, 0.3);
-  --glow-success: 0 0 20px rgba(16, 229, 117, 0.3);
-  --glow-danger: 0 0 20px rgba(226, 75, 75, 0.3);
+  --glow-primary: 0 0 20px rgba(22, 163, 74, 0.2);
 }
-
-/* --- Tailwind v4 Theme Registration ---
-   This tells Tailwind: "Turn my CSS variables into utility classes."
-   After this, `bg-primary` = background-color: #136AB7 */
 
 @theme inline {
   --color-primary: var(--primary);
   --color-primary-light: var(--primary-light);
   --color-primary-dark: var(--primary-dark);
-  
   --color-accent: var(--accent);
-  --color-accent-light: var(--accent-light);
-  
-  --color-light-fill: var(--light-fill);
-  --color-light-fill-muted: var(--light-fill-muted);
-  
   --color-success: var(--success);
-  --color-success-dark: var(--success-dark);
-  
+  --color-success-dark: #15803D;
   --color-danger: var(--danger);
-  --color-danger-dark: var(--danger-dark);
-  
+  --color-danger-dark: #B91C1C;
   --color-warning: var(--warning);
-  
   --color-background: var(--background);
   --color-background-secondary: var(--background-secondary);
   --color-background-tertiary: var(--background-tertiary);
-  
   --color-foreground: var(--foreground);
   --color-foreground-secondary: var(--foreground-secondary);
   --color-foreground-tertiary: var(--foreground-tertiary);
-  
   --color-border: var(--border);
   --color-border-hover: var(--border-hover);
-  
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  
-  /* Animation speed tokens */
   --animate-fade-in: fade-in 0.5s ease-out;
   --animate-slide-up: slide-up 0.5s ease-out;
   --animate-slide-down: slide-down 0.3s ease-out;
@@ -115,69 +61,19 @@
   --animate-progress-fill: progress-fill 1s ease-out;
 }
 
-/* --- Keyframe Animations ---
-   These define HOW things move. The @theme block above
-   connects them to Tailwind classes like `animate-fade-in` */
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slide-down { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scale-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+@keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(22, 163, 74, 0.15); } 50% { box-shadow: 0 0 40px rgba(22, 163, 74, 0.3); } }
+@keyframes radar-sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes count-up { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+@keyframes progress-fill { from { width: 0%; } }
 
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slide-down {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes scale-in {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(19, 106, 183, 0.2); }
-  50% { box-shadow: 0 0 40px rgba(19, 106, 183, 0.4); }
-}
-
-@keyframes radar-sweep {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-
-@keyframes count-up {
-  from { opacity: 0; transform: scale(0.5); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes progress-fill {
-  from { width: 0%; }
-}
-
-/* --- Base Styles --- */
-
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-  height: 100%;
-}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; height: 100%; }
 
 body {
   background: var(--background);
@@ -190,11 +86,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* --- Utility Classes ---
-   These are custom utilities that Tailwind doesn't provide out of the box.
-   They handle glassmorphism, glow effects, and gradients. */
-
-/* Glassmorphism — frosted glass effect for cards and navbars */
 .glass {
   background: var(--glass-bg);
   backdrop-filter: blur(16px);
@@ -204,13 +95,12 @@ body {
 }
 
 .glass-light {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-/* Gradient text — for headlines that pop */
 .gradient-text {
   background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
   -webkit-background-clip: text;
@@ -225,7 +115,6 @@ body {
   background-clip: text;
 }
 
-/* Gradient backgrounds */
 .gradient-primary {
   background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
 }
@@ -234,51 +123,18 @@ body {
   background: linear-gradient(180deg, var(--background) 0%, var(--background-secondary) 100%);
 }
 
-/* Glow effects on hover */
-.glow-primary {
-  box-shadow: var(--glow-primary);
-}
+.glow-primary { box-shadow: var(--glow-primary); }
 
-.glow-accent {
-  box-shadow: var(--glow-accent);
-}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--background); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-hover); }
 
-/* Custom scrollbar — looks premium, not the ugly default */
-::-webkit-scrollbar {
-  width: 6px;
-}
+.focus-ring { outline: none; }
+.focus-ring:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 4px; }
 
-::-webkit-scrollbar-track {
-  background: var(--background);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--border-hover);
-}
-
-/* Focus ring — accessible but beautiful */
-.focus-ring {
-  outline: none;
-}
-.focus-ring:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* Shimmer loading effect */
 .shimmer {
-  background: linear-gradient(
-    90deg,
-    var(--background-secondary) 25%,
-    var(--background-tertiary) 50%,
-    var(--background-secondary) 75%
-  );
+  background: linear-gradient(90deg, var(--background-secondary) 25%, var(--background-tertiary) 50%, var(--background-secondary) 75%);
   background-size: 200% 100%;
   animation: shimmer 2s linear infinite;
 }

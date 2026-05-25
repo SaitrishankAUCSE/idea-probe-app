@@ -2,11 +2,8 @@
    DASHBOARD PAGE — app/dashboard/page.tsx
    ============================================
    
-   🎓 TEACHING NOTES:
-   
-   The user dashboard. This is where users manage their account,
-   see their usage limits, and access the Stripe Customer Portal
-   if they are on the Pro plan.
+   The user dashboard. This is where users manage their account
+   and see their usage limits.
    ============================================ */
 
 "use client";
@@ -14,14 +11,14 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { AuthGuard } from "@/components/AuthGuard";
-import { User, Settings, CreditCard, Zap, Loader2, LogOut } from "lucide-react";
+import { User, Settings, Zap, Loader2, LogOut } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardPage() {
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [loadingPortal, setLoadingPortal] = useState(false);
+
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -44,25 +41,7 @@ export default function DashboardPage() {
     fetchProfile();
   }, [user]);
 
-  const handleManageSubscription = async () => {
-    if (!user) return;
-    setLoadingPortal(true);
-    try {
-      const token = await user.getIdToken();
-      const res = await fetch("/api/stripe/portal", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch (err) {
-      alert("Failed to open customer portal");
-    } finally {
-      setLoadingPortal(false);
-    }
-  };
+
 
   return (
     <AuthGuard>
@@ -110,7 +89,7 @@ export default function DashboardPage() {
                   {/* Plan Details */}
                   <div className="glass rounded-2xl p-6">
                     <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                      <CreditCard className="w-5 h-5 text-accent" />
+                      <Zap className="w-5 h-5 text-primary" />
                       Current Plan
                     </h3>
                     
@@ -141,14 +120,9 @@ export default function DashboardPage() {
                           Upgrade
                         </Link>
                       ) : (
-                        <button
-                          onClick={handleManageSubscription}
-                          disabled={loadingPortal}
-                          className="px-4 py-2 rounded-lg bg-background border border-border hover:border-border-hover text-sm font-medium transition-all flex items-center gap-2"
-                        >
-                          {loadingPortal ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                          Manage Billing
-                        </button>
+                        <span className="text-sm text-foreground-secondary">
+                          Contact support@ideaprobe.io to manage billing
+                        </span>
                       )}
                     </div>
                   </div>

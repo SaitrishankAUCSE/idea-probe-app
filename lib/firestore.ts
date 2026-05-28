@@ -5,6 +5,7 @@ import type { UserProfile, ValidationResult, ValidationDoc } from "@/types";
 const VIP_EMAILS = [
   "saitrishankb9@gmail.com",
   "bannusai899@gmail.com",
+  "saitrishankb1311@gmail.com",
 ];
 
 /** Check if an email is a VIP account */

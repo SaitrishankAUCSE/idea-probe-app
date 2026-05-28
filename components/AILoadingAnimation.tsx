@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Loader2 } from "lucide-react";
 
@@ -24,6 +24,16 @@ export function AILoadingAnimation({ isVisible }: AILoadingAnimationProps) {
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [activeStep, setActiveStep] = useState(0);
   const [progress, setProgress] = useState(0);
+  const stepsContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (stepsContainerRef.current) {
+      stepsContainerRef.current.scrollTo({
+        top: stepsContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [activeStep, completedSteps]);
 
   useEffect(() => {
     if (!isVisible) {
@@ -149,7 +159,11 @@ export function AILoadingAnimation({ isVisible }: AILoadingAnimationProps) {
             </div>
 
             {/* Steps */}
-            <div className="space-y-1 mx-4 max-h-[280px] overflow-hidden">
+            <div 
+              ref={stepsContainerRef}
+              className="space-y-1 mx-4 max-h-[280px] overflow-hidden relative pb-10"
+              style={{ scrollBehavior: 'smooth' }}
+            >
               {analysisSteps.map((step, index) => {
                 const isCompleted = completedSteps.includes(index);
                 const isActive = activeStep === index;

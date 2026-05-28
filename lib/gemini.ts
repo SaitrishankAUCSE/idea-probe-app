@@ -225,6 +225,8 @@ ${JSON.stringify(validationSchema, null, 2)}`;
     systemInstruction: systemPrompt,
     tools: [{ googleSearch: {} }],
     temperature: 0.2,
+    responseMimeType: "application/json",
+    responseSchema: validationSchema,
   };
 
   function extractJsonPayload(text: string): string {
@@ -300,8 +302,10 @@ ${JSON.stringify(validationSchema, null, 2)}`;
     return JSON.parse(extractedText) as ValidationResult;
   } catch (err: unknown) {
     const errMsg = err instanceof Error ? err.message : String(err);
+    console.error("JSON PARSE ERROR:", errMsg);
+    console.error("RAW TEXT:", rawText);
     throw new Error(
-      `Failed to parse Gemini response as JSON: ${errMsg}. Raw response: ${rawText.slice(0, 1000)}`
+      `JSON_PARSE_FAILED: ${errMsg}`
     );
   }
 }

@@ -70,8 +70,15 @@ export async function POST(req: NextRequest) {
       );
     }
     
+    if (errorMessage.includes("JSON_PARSE_FAILED")) {
+      return NextResponse.json(
+        { error: "AI returned invalid format: " + errorMessage.replace("JSON_PARSE_FAILED: ", "") },
+        { status: 500 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: "Something went wrong during analysis. Please try again." },
+      { error: `Internal Error: ${errorMessage}` },
       { status: 500 }
     );
   }

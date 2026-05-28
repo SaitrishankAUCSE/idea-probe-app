@@ -73,15 +73,34 @@ if (getApps().length === 0) {
    * Click "Generate new private key" → downloads a JSON file
    * Extract projectId, client_email, and private_key from that JSON
    */
+  // Parse the private key — handle every format Vercel might store it in:
+  //  1. Actual newlines (Vercel auto-expanded)
+  //  2. Literal two-char sequence \n (from pasting JSON value)
+  //  3. Wrapped in surrounding quotes
+  let rawKey = process.env.FIREBASE_PRIVATE_KEY || '';
+
+  // Strip surrounding double or single quotes
+  if ((rawKey.startsWith('"') && rawKey.endsWith('"')) ||
+      (rawKey.startsWith("'") && rawKey.endsWith("'"))) {
+    rawKey = rawKey.slice(1, -1);
+  }
+
+  // Replace literal \n (the two characters backslash + n) with real newlines
+  rawKey = rawKey.split('\\n').join('\n');
+
   const serviceAccount: ServiceAccount = {
     projectId: process.env.FIREBASE_PROJECT_ID || 'dummy',
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL || 'dummy@example.com',
-    privateKey: (process.env.FIREBASE_PRIVATE_KEY || '-----BEGIN PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCd1n7TL2P3ne+3\\nPlSezFoySBY+7S6qlt+OkP4NZ66//2hrRLbs8GRvBPa5fnnZjCgLd5lYu/dAv1A+\\nmIbxQP4zwqoFRylmfORZJnm67Q5uOXDqEdMNKyJb/jPBX32GZq9Du62jDo17p79n\\n8ICoODtpn5bEm58/+AThlvyly3mkBGikGQKqV6b2T3bk6nrv/7nGc11/PbjbLf/7\\n8H9vdsmQx4NWYfy8+fw1x1ZhCe6GfHIYfjxRTW0yRDGCtLRx2+Cv/PCfSuQncjL9\\n5PsHMCswd5oicVmERQMU6YFCNvF4WR2FmjMMrIJsLlS0DnUFVV2N2+IZIDnFO4dj\\noeVEZlgXAgMBAAECggEAA9nEXAl2OlDYFOGD1ddfl2FNIH4rH5Lete8fDLb1H+Dc\\nbG89S8zNAePL9/zToww04C4r7CGy9WKQ5ghU3eJ243M9eXyh0DiQXiojR0Z11xhI\\nzFrOZZvY7ix44jJDVbU3CoyPUQnq/kpxYiIPXOawAzupfEAmjLxl/YQU6B+2r/9d\\nI7TItOVjRIfNy8wgaSTk88yUs6lD23wHfGVZrl6U0FMyvU42KoZK2U9M1p9uiv38\\nYQ5Ax4CDs8TgOyXVCFI4kLmzA/yG0ze8A6aLcWKFH6YLkxDMdXWOKtsCrmBaUwrj\\nLdIyg8MyPw9Kto82056YHU0CJSBLhPVHa7+EhxD/QQKBgQDVvqQD+xDo2ABfIwkK\\nEHPrsthIX71ORbhsc2lT2li4x58J2nouCCP8ckvP4AEYuAWeJmOY1CTtdFHS2w3D\\nuFfwc8RzkGmNeuwe2h4QEhM2prIodqJz2N8vLiFo5cEtdNa+KBiK4uZiWiAG2ohP\\nw99NkUYGXcvthW0An41Nsg1xJQKBgQC9CnqCiGwLw5qpBaTuG6GzzFxrozZiI0sD\\ndCyIfmKK1K82Py8qcsufk2DsNj2fnrYPNEpJoqWD/y5MWjFAEjN2/dM/B6JOevtQ\\nWYgdeTDGE/f7SHo/+n3zT0MXaDwDJlt/dSqAO4Y3IbrCwcsAYy2M5IaTecuAqFkU\\nO+yoFZR1iwKBgQC6noyNfTOyWIVaizhlNSBA9hGofw7FvFHdPpcDw2wbSQ8uhzaN\\n4kWpMBHJGYdbkbA1+MaUtQTY3epi8yb9b4I4SpuHWtsNz/lApqgA2Ac2fCyo74u/\\nIecbRmedMpyLl6u2s0NaX+lOjenQkhTZr+bTzrcY7+QRKaGWHbg90euykQKBgFLd\\nnQZLNtGRVOJyjvGxOxjNpFWqndQ3FFLXQg4zGI8y2/szh0FcQNYajIn+3NRzher0\\nSPwuR8+stGbTwnMLh3PJoCgo+ITec/usw3XoAfFSH4oPI0eYTk2xmP9RubzHu6QL\\ngC3l6deQ+YUV3h61Wuo/4p4S7ZngMewkuICVtRYxAoGAfGAeXeGdBa/Cz5Oc8Nkg\\nxqg1rsUFpmk/5K6YxCprJg482phByV6ygyjNQye/Nxo+gUIkotlNhU0k3A+hpPRf\\neLlSAnz7sIY1RpKiTsEzc9sMWlhNQhWIJ8COS1SZ3pdNrmqXntPbHUBVNGYMemic\\nEinP33LDykl1FxonE1n7EQk=\\n-----END PRIVATE KEY-----').replace(/\\n/g, '\n'),
+    privateKey: rawKey || 'dummy_key',
   };
 
-  initializeApp({
-    credential: cert(serviceAccount),
-  });
+  try {
+    initializeApp({
+      credential: cert(serviceAccount),
+    });
+  } catch (error) {
+    console.error('Firebase admin initialization error', error);
+  }
 }
 
 /**
@@ -110,22 +129,6 @@ if (getApps().length === 0) {
  *   const decoded = await adminAuth.verifyIdToken(token);
  *   // decoded.uid is guaranteed to be the real user
  */
-export const adminAuth = getAuth();
+export const adminAuth = getApps().length > 0 ? getAuth() : ({} as any);
 
-/**
- * Firebase Admin Firestore instance.
- *
- * Unlike the client's `db`, this instance has NO security rule restrictions.
- * It can read/write/delete anything in the database.
- *
- * USE CASES:
- *   - API routes that need to write data on behalf of users
- *   - Razorpay webhooks that update user plans
- *   - Background jobs that reset monthly usage counters
- *   - Admin operations that span multiple users' data
- *
- * CAUTION: Because this bypasses security rules, every query you write
- * must include its own authorization checks. Always verify the user's
- * identity (via adminAuth.verifyIdToken) before performing operations.
- */
-export const adminDb = getFirestore();
+export const adminDb = getApps().length > 0 ? getFirestore() : ({} as any);

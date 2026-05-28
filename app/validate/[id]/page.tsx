@@ -71,10 +71,7 @@ export default function ResultsPage({
     const fetchResult = async () => {
       if (!user) return;
       try {
-        const token = await user.getIdToken();
-        const res = await fetch(`/api/validate/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch(`/api/validate/${id}`);
 
         if (!res.ok) {
           setError("Validation not found.");

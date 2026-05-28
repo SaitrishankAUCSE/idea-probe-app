@@ -54,10 +54,7 @@ export default function HistoryPage() {
     const fetchHistory = async () => {
       if (!user) return;
       try {
-        const token = await user.getIdToken();
-        const res = await fetch("/api/history", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch("/api/history");
         if (res.ok) {
           const data = await res.json();
           setValidations(data.validations || []);

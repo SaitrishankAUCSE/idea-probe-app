@@ -124,10 +124,8 @@ export default function PricingPage() {
         return;
       }
 
-      const token = await user.getIdToken();
       const res = await fetch("/api/razorpay/create-order", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
 
@@ -143,7 +141,6 @@ export default function PricingPage() {
           const verifyRes = await fetch("/api/razorpay/verify", {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify(response),

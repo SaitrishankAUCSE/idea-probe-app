@@ -24,10 +24,7 @@ export default function DashboardPage() {
     const fetchProfile = async () => {
       if (!user) return;
       try {
-        const token = await user.getIdToken();
-        const res = await fetch("/api/usage", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch("/api/usage");
         if (res.ok) {
           const data = await res.json();
           setProfile(data);

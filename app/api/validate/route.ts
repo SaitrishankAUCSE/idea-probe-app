@@ -6,12 +6,11 @@ import { saveValidation, canValidate, incrementUsage } from "@/lib/firestore";
 export async function POST(req: NextRequest) {
   try {
     // 1. Authenticate the request
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = req.cookies.get("session")?.value;
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized - No Session" }, { status: 401 });
     }
-    const token = authHeader.split("Bearer ")[1];
-    const decodedToken = await adminAuth.verifyIdToken(token);
+    const decodedToken = await adminAuth.verifySessionCookie(session, true);
     const userId = decodedToken.uid;
 
     // 2. Parse request body

@@ -4,13 +4,12 @@ import { getValidations } from "@/lib/firestore";
 
 export async function GET(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    const session = req.cookies.get("session")?.value;
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const token = authHeader.split("Bearer ")[1];
-    const decodedToken = await adminAuth.verifyIdToken(token);
-    const userId = decodedToken.uid;
+    const decoded = await adminAuth.verifySessionCookie(session, true);
+    const userId = decoded.uid;
 
     const validations = await getValidations(userId);
 

@@ -1,31 +1,15 @@
-/* ============================================
-   SIGNUP PAGE — app/signup/page.tsx
-   ============================================
-   
-   🎓 TEACHING NOTES:
-   
-   Almost identical to the login page, but with:
-   1. createUserWithEmailAndPassword instead of signInWithEmailAndPassword
-   2. A "confirm password" field
-   3. The AuthProvider's onFirstSignUp creates a Firestore profile
-   
-   Why a separate page instead of a tab?
-   - Separate URL = better analytics tracking
-   - Different messaging ("Start validating" vs "Welcome back")
-   - SEO: separate pages can rank for different keywords
-   ============================================ */
-
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { Radar, Mail, Lock, Eye, EyeOff, Loader2, User } from "lucide-react";
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
-  const { user, loading, signInWithGoogle, signUpWithEmail } = useAuth();
+  const searchParams = useSearchParams();
+  const { user, loading, signInWithGoogle, signUpWithEmail, signOut } = useAuth();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -35,41 +19,39 @@ export default function SignupPage() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  /* Redirect if already logged in */
   useEffect(() => {
-    if (user && !loading) {
+    if (searchParams.get("session") === "expired" && user) {
+      signOut();
+      setError("Your session expired. Please sign up or log in again.");
+    } else if (user && !loading && !isSubmitting) {
       router.push("/validate");
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, searchParams, signOut, isSubmitting]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    /* Client-side validation */
     if (password !== confirmPassword) {
       setError("Passwords don't match.");
       return;
     }
-
     if (password.length < 6) {
       setError("Password must be at least 6 characters.");
       return;
     }
 
     setIsSubmitting(true);
-
     try {
-      await signUpWithEmail(email, password);
-      // The AuthProvider creates a Firestore profile automatically
-      // useEffect will redirect to /validate
+      await signUpWithEmail(name, email, password);
+      router.push("/validate");
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Signup failed";
-      if (errorMessage.includes("email-already-in-use")) {
+      const msg = err instanceof Error ? err.message : "Signup failed";
+      if (msg.includes("email-already-in-use")) {
         setError("An account with this email already exists. Try signing in.");
-      } else if (errorMessage.includes("weak-password")) {
+      } else if (msg.includes("weak-password")) {
         setError("Password is too weak. Use at least 6 characters.");
-      } else if (errorMessage.includes("invalid-email")) {
+      } else if (msg.includes("invalid-email")) {
         setError("Please enter a valid email address.");
       } else {
         setError("Something went wrong. Please try again.");
@@ -81,12 +63,20 @@ export default function SignupPage() {
 
   const handleGoogleSignup = async () => {
     setError("");
+    setIsSubmitting(true);
     try {
-      await signInWithGoogle();
+      await signInWithGoogle(true);
+      router.push("/validate");
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : "Google signup failed";
-      if (errorMessage.includes("popup-closed-by-user")) return;
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("popup-closed-by-user")) return;
+      if (msg.includes("account-exists")) {
+        setError("You already have an account. Please sign in instead.");
+        return;
+      }
       setError("Google sign-up failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -98,18 +88,23 @@ export default function SignupPage() {
     );
   }
 
-  if (user) return null;
+  if (user) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
-      {/* Background decorations */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         <div className="absolute top-1/3 left-1/3 w-[400px] h-[400px] rounded-full bg-accent/5 blur-[100px]" />
         <div className="absolute bottom-1/3 right-1/3 w-[300px] h-[300px] rounded-full bg-primary/5 blur-[100px]" />
       </div>
 
       <div className="w-full max-w-md">
-        {/* Logo + heading */}
+        {/* Header */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
             <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center">
@@ -117,15 +112,15 @@ export default function SignupPage() {
             </div>
             <span className="text-xl font-bold">IdeaProbe</span>
           </Link>
-          <h1 className="text-2xl font-bold">Start validating ideas</h1>
+          <h1 className="text-2xl font-bold">Create your account</h1>
           <p className="text-foreground-secondary mt-1">
-            Create your free account — no credit card required
+            Start validating ideas — no credit card required
           </p>
         </div>
 
-        {/* Signup card */}
+        {/* Card */}
         <div className="glass rounded-2xl p-8">
-          {/* Google signup */}
+          {/* Google */}
           <button
             onClick={handleGoogleSignup}
             className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-background border border-border hover:border-border-hover transition-all duration-200 font-medium"
@@ -159,7 +154,7 @@ export default function SignupPage() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="John Doe"
+                  placeholder="Your full name"
                   required
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-background border border-border text-foreground placeholder:text-foreground-tertiary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all"
                 />
@@ -234,7 +229,7 @@ export default function SignupPage() {
 
             {/* Error */}
             {error && (
-              <div className="text-sm text-danger bg-danger/10 px-4 py-2.5 rounded-lg animate-slide-down">
+              <div className="text-sm text-danger bg-danger/10 px-4 py-2.5 rounded-lg">
                 {error}
               </div>
             )}
@@ -255,14 +250,6 @@ export default function SignupPage() {
               )}
             </button>
           </form>
-
-          {/* Terms */}
-          <p className="text-xs text-foreground-tertiary text-center mt-4">
-            By signing up, you agree to our{" "}
-            <Link href="/terms" className="text-primary hover:underline">Terms</Link>
-            {" "}and{" "}
-            <Link href="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
-          </p>
         </div>
 
         {/* Login link */}
@@ -274,5 +261,13 @@ export default function SignupPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="min-h-[80vh] flex items-center justify-center"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>}>
+      <SignupForm />
+    </Suspense>
   );
 }

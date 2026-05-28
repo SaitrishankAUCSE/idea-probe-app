@@ -4,13 +4,12 @@ import { getUserProfile } from "@/lib/firestore";
 
 export async function GET(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    const session = req.cookies.get("session")?.value;
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const token = authHeader.split("Bearer ")[1];
-    const decodedToken = await adminAuth.verifyIdToken(token);
-    const userId = decodedToken.uid;
+    const decoded = await adminAuth.verifySessionCookie(session, true);
+    const userId = decoded.uid;
 
     const profile = await getUserProfile(userId);
 
@@ -21,7 +20,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       plan: profile.plan || "free",
       used: profile.validationsThisMonth || 0,
-      limit: profile.plan === "pro" ? -1 : 3, // -1 means unlimited
+      limit: profile.plan === "pro" ? -1 : 3,
     });
   } catch (error) {
     return NextResponse.json({ error: "Failed to fetch usage" }, { status: 500 });

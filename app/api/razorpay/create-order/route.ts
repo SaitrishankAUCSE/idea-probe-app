@@ -26,30 +26,27 @@
  * For INR, that's paise: ₹900 = 90000 paise.
  */
 
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebase-admin";
 import { razorpay } from "@/lib/razorpay";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     // --------------------------------------------------
     // Step 1: Authenticate the user via Firebase ID token
     // --------------------------------------------------
-    // The client sends: Authorization: Bearer <idToken>
-    // We split on "Bearer " to extract just the token part.
-    const authHeader = request.headers.get("Authorization");
-    const token = authHeader?.split("Bearer ")[1];
+    // 1. Authenticate the request via session cookie
+    const session = request.cookies.get("session")?.value;
 
-    if (!token) {
+    if (!session) {
       return NextResponse.json(
-        { error: "Missing authorization token" },
+        { error: "Missing session cookie" },
         { status: 401 }
       );
     }
 
-    // verifyIdToken checks the JWT signature with Google's public keys.
-    // If the token is expired, revoked, or forged, this throws.
-    const decoded = await adminAuth.verifyIdToken(token);
+    // verifySessionCookie checks the JWT signature with Google's public keys.
+    const decoded = await adminAuth.verifySessionCookie(session, true);
     const userId = decoded.uid;
 
     // --------------------------------------------------

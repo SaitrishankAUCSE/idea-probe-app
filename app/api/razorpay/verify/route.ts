@@ -28,26 +28,24 @@
  * just implemented differently.
  */
 
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import crypto from "crypto";
 import { adminAuth, adminDb } from "@/lib/firebase-admin";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     // --------------------------------------------------
-    // Step 1: Authenticate the user
-    // --------------------------------------------------
-    const authHeader = request.headers.get("Authorization");
-    const token = authHeader?.split("Bearer ")[1];
+    // 1. Authenticate the request via session cookie
+    const session = request.cookies.get("session")?.value;
 
-    if (!token) {
+    if (!session) {
       return NextResponse.json(
-        { error: "Missing authorization token" },
+        { error: "Missing session cookie" },
         { status: 401 }
       );
     }
 
-    const decoded = await adminAuth.verifyIdToken(token);
+    const decoded = await adminAuth.verifySessionCookie(session, true);
     const userId = decoded.uid;
 
     // --------------------------------------------------

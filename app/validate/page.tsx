@@ -77,10 +77,7 @@ export default function ValidatePage() {
     const fetchUsage = async () => {
       if (!user) return;
       try {
-        const token = await user.getIdToken();
-        const res = await fetch("/api/usage", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await fetch("/api/usage");
         if (res.ok) {
           const data = await res.json();
           setUsageInfo(data);
@@ -108,13 +105,10 @@ export default function ValidatePage() {
     setIsValidating(true);
 
     try {
-      const token = await user!.getIdToken();
-
       const response = await fetch("/api/validate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ idea: idea.trim() }),
       });

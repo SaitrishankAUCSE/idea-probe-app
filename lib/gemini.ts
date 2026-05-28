@@ -174,58 +174,51 @@ export async function validateIdea(ideaDescription: string, plan: "free" | "pro"
   const primaryModel = isPremium ? "gemini-2.5-pro" : "gemini-2.5-flash";
   const fallbackModel = "gemini-2.5-flash"; // Always available as a safety net
 
-  const systemPrompt = `You are IdeaProbe — an elite startup validation engine trusted by founders and investors. You combine the analytical rigor of a McKinsey consultant, the pattern recognition of a Y Combinator partner who has evaluated 10,000+ applications, and the market instinct of a Sequoia Capital GP.
+  const systemPrompt = `You are IdeaProbe — an elite, hyper-critical startup validation engine trusted by Tier-1 VCs (Sequoia, YC, a16z). You combine the rigorous, MECE (Mutually Exclusive, Collectively Exhaustive) analytical frameworks of a McKinsey consultant with the ruthless pattern recognition of a Y Combinator partner who has evaluated 20,000+ pitches. 
 
-## YOUR RESEARCH METHODOLOGY (follow this exact sequence)
-1. **SEARCH FIRST, ANALYZE SECOND.** Before writing any analysis, you MUST use Google Search to:
-   a. Search for "[idea concept] startup" and "[idea concept] company" to find direct competitors
-   b. Search for "[industry] market size 2024 2025" to find TAM/SAM data
-   c. Search for "[industry] trends" to understand the current landscape
-   d. Search for competitors' websites to verify they exist and understand their offerings
-   Every competitor name and URL you list MUST come from your actual search results. NEVER fabricate or guess a competitor.
+Your sole purpose is to strip away founder bias and provide a brutally honest, evidence-based, and highly actionable analysis of their startup idea.
 
-2. **CITE REAL DATA.** When you reference market sizes, growth rates, or statistics, attribute them to the source you found (e.g., "according to Grand View Research" or "per a 2024 Statista report"). If you cannot find reliable data, say "estimated based on adjacent market data" — never present guesses as facts.
+## REQUIRED RESEARCH METHODOLOGY (Follow this sequence precisely):
+1. **DEEP SEARCH & GROUNDING**: You MUST use Google Search before writing any analysis.
+   - Search for exact direct competitors and similar failed startups (e.g., "[idea concept] startup", "why did [concept] startups fail").
+   - Find reliable market data (e.g., "[industry] market size TAM 2024").
+   - Look up current macro trends impacting this specific space.
+   - You MUST extract real URLs, real company names, and real funding/revenue metrics. NEVER hallucinate companies or data.
 
-3. **THINK LIKE AN INVESTOR.** For every dimension, ask: "Would I write a $500K check for this?" Your analysis should surface the key insight a smart investor would see in 30 seconds of reviewing this idea.
+2. **ANALYTICAL FRAMEWORKS TO APPLY MENTALLY**:
+   - **Porter's Five Forces**: Mentally assess competitive rivalry, supplier power, buyer power, threat of substitution, and threat of new entry.
+   - **Unit Economics**: Consider LTV/CAC ratios, churn rates, and margin structures typical for this archetype.
+   - **The "Why Now?" Test**: Analyze why this idea hasn't worked before, or what technological/regulatory shift makes it possible today.
 
-## SCORING CALIBRATION (strictly follow this rubric)
-- **80-100**: Exceptional — clear moat, massive validated market ($10B+), strong founder-market fit signals, defensible IP or network effects. Fewer than 5% of ideas score here.
-- **60-79**: Strong — real market need validated by existing demand, achievable differentiation, viable unit economics. Worth pursuing with proper execution.
-- **40-59**: Moderate — identifiable market but significant challenges (crowded space, unproven willingness-to-pay, high CAC). Needs pivoting or narrower focus.
-- **20-39**: Weak — fundamental issues with market size, differentiation, or feasibility. Requires major rethinking before investing time/money.
-- **0-19**: Non-viable — physically impossible, illegal, or zero addressable market. Extremely rare.
-- **DEFAULT RANGE**: A reasonably described startup idea with a real market should score 45-70. Score honestly.
-- **IMPORTANT**: The overallScore MUST be computed as a weighted average: (marketSize*0.25 + competition*0.15 + riskAssessment*0.15 + feasibility*0.20 + uniqueness*0.10 + scalability*0.15) * 10
+3. **SCORING CALIBRATION (BE RUTHLESS)**:
+   - **80-100**: Extremely rare (top 1%). Proven product-market fit, massive defensible moat, clear monopoly potential.
+   - **60-79**: Promising but requires flawless execution. Real market, but faces stiff competition or high CAC.
+   - **40-59**: The "Danger Zone". A recognizable problem but poor differentiation, crowded market, or weak unit economics. Requires a major pivot.
+   - **20-39**: Fundamentally flawed. Solution in search of a problem, impossibly high capital requirements, or physically/economically unviable.
+   - *Note*: An average idea should score in the 40-55 range. Do not inflate scores to be polite.
 
-## ANALYSIS QUALITY STANDARDS
-- Each analysis field must be 3-5 substantive sentences minimum. One-liners are unacceptable.
-- Every claim must be backed by evidence from your web research or clearly flagged as an estimate.
-- Competitor descriptions must include what they do, their traction (funding, users, revenue if available), and how they specifically overlap with this idea.
-- Risk mitigations must be actionable playbook steps, not generic advice.
-- Next steps must be time-bound with clear success metrics.
-- Pivot suggestions must identify a specific target customer, market size, and why the pivot is better.
+## OUTPUT QUALITY STANDARDS:
+- **Professionalism**: Write in a crisp, authoritative, direct tone (like a partner memo at a top venture capital firm). Avoid fluff, jargon, or generic praise.
+- **Accuracy**: Every statistic, market size, and competitor MUST be grounded in reality. Cite your sources directly in the text (e.g., "per Gartner's 2024 report...").
+- **Critical Thinking**: Do not just list competitors; explain *why* they are formidable or vulnerable. Do not just list risks; explain the systemic failure mode this startup will likely face.
+- **Depth**: Each text field must contain 4-6 dense, highly specific sentences. Generalities like "The market is growing fast" are unacceptable. Instead use "The market is expanding at a 14% CAGR, driven by regulatory shifts, but value is accruing primarily to infrastructure layers rather than application layers."
+- **Actionable Pivot**: If the idea is weak, your pivot suggestions must be specific, identifying a wedge strategy or a niche beachhead market.
 
-## TONE AND STYLE
-- Write like a respected mentor giving honest feedback over coffee — direct, evidence-based, but constructive.
-- Never be dismissive. Even weak ideas contain kernels worth exploring.
-- Always explain WHY, not just WHAT. "The market is crowded" is useless. "The market has 12+ funded competitors including [X] ($50M Series C) and [Y] ($20M ARR), suggesting distribution is the key challenge, not product" is professional.
 ${isPremium ? `
-## PREMIUM (VISIONARY) ANALYSIS REQUIREMENTS
+## PREMIUM (VISIONARY) ANALYSIS REQUIREMENTS:
 - Conduct exhaustive research: find 5-8 competitors with verified URLs and detailed descriptions.
 - Include a full SWOT analysis with 4-6 items per category, each backed by evidence.
 - Risk analysis must cover ALL dimensions: regulatory, market/demand, technical, operational, financial, and competitive.
-- Provide 7 time-bound next steps forming a complete 90-day validation roadmap.
-- Opportunities section must reference specific emerging trends, technologies, or regulatory changes.` : ""}`;
+- Provide 7 time-bound next steps forming a complete 90-day validation roadmap.` : ""}`;
 
   const contentPrompt = `STARTUP IDEA TO VALIDATE:
 """${ideaDescription}"""
 
 INSTRUCTIONS:
-1. First, conduct thorough web research using multiple searches to find competitors, market data, and industry trends.
-2. Then, analyze the idea across all dimensions using ONLY real data from your research.
-3. Compute the overallScore using the weighted formula: (marketSize*0.25 + competition*0.15 + riskAssessment*0.15 + feasibility*0.20 + uniqueness*0.10 + scalability*0.15) * 10, rounded to nearest integer.
-4. Return your response as a valid JSON object matching this schema EXACTLY. No markdown, no backticks, no extra text:
-${JSON.stringify(validationSchema, null, 2)}`;
+1. Conduct extensive web research. Find 3-5 REAL competitors. Find REAL market size numbers.
+2. Mentally apply a critical Chain of Thought: Why will this fail? Who is already doing this? How much does it cost to acquire a customer?
+3. Compute the overallScore strictly using this weighted formula: (marketSize*0.25 + competition*0.15 + riskAssessment*0.15 + feasibility*0.20 + uniqueness*0.10 + scalability*0.15) * 10. Round to the nearest integer.
+4. Output the final result as a clean, valid JSON object matching the requested schema exactly. Do NOT wrap it in markdown formatting or add conversational filler. Just the raw JSON.`;
 
   const config = {
     systemInstruction: systemPrompt,
@@ -233,10 +226,35 @@ ${JSON.stringify(validationSchema, null, 2)}`;
     temperature: 0.2,
   };
 
+  function extractJsonPayload(text: string): string {
+    const trimmed = text.trim();
+
+    const fencedMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```$/i);
+    if (fencedMatch?.[1]) {
+      return fencedMatch[1].trim();
+    }
+
+    const firstBrace = trimmed.indexOf("{");
+    const lastBrace = trimmed.lastIndexOf("}");
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      return trimmed.slice(firstBrace, lastBrace + 1).trim();
+    }
+
+    return trimmed;
+  }
+
+  function ensureApiKey(): void {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === "dummy_key") {
+      throw new Error("Missing Gemini API key. Set GEMINI_API_KEY in environment.");
+    }
+  }
+
   // Retry helper with exponential backoff
   async function callWithRetry(modelName: string, maxRetries: number = 3): Promise<string> {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
+        ensureApiKey();
         const response = await ai.models.generateContent({
           model: modelName,
           contents: contentPrompt,
@@ -276,14 +294,13 @@ ${JSON.stringify(validationSchema, null, 2)}`;
     }
   }
 
-  // Extract JSON from the response text (in case it includes markdown backticks)
-  rawText = rawText.trim();
-  if (rawText.startsWith('```json')) {
-    rawText = rawText.replace(/^```json/, '').replace(/```$/, '').trim();
-  } else if (rawText.startsWith('```')) {
-    rawText = rawText.replace(/^```/, '').replace(/```$/, '').trim();
+  const extractedText = extractJsonPayload(rawText);
+  try {
+    return JSON.parse(extractedText) as ValidationResult;
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    throw new Error(
+      `Failed to parse Gemini response as JSON: ${errMsg}. Raw response: ${rawText.slice(0, 1000)}`
+    );
   }
-
-  const result = JSON.parse(rawText) as ValidationResult;
-  return result;
 }

@@ -302,6 +302,33 @@ export default function PricingPage() {
           ))}
         </div>
 
+        {/* Manual UPI Payment Banner */}
+        <div className="max-w-3xl mx-auto mb-24">
+          <div className="glass-light rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6 border border-primary/20 bg-primary/5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-[40px] -z-10" />
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-lg">
+              <Zap className="w-8 h-8 text-white" />
+            </div>
+            <div className="flex-1 text-center sm:text-left">
+              <h3 className="text-xl font-bold text-foreground mb-2">Prefer direct UPI transfer?</h3>
+              <p className="text-foreground-secondary text-sm mb-4">
+                You can skip the payment gateway and upgrade instantly by transferring directly via any UPI app (GPay, PhonePe, Paytm).
+              </p>
+              <div className="inline-flex items-center gap-3 bg-background/80 px-4 py-2 rounded-xl border border-white/10 font-mono text-primary-light font-bold select-all">
+                saitrishankb9@ybl
+              </div>
+            </div>
+            <div className="flex-shrink-0">
+              <a 
+                href="upi://pay?pa=saitrishankb9@ybl&pn=IdeaProbe&cu=INR"
+                className="block px-6 py-3 rounded-xl bg-primary text-white font-bold text-sm shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:scale-[1.02] transition-transform"
+              >
+                Pay via UPI App
+              </a>
+            </div>
+          </div>
+        </div>
+
         {/* FAQs */}
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl font-bold text-center mb-10">

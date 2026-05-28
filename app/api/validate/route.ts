@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     const effectivePlan = isVipEmail(profile?.email || "") ? "visionary" : (profile?.plan || "free");
 
     // 4. Call Gemini AI (this takes ~10-20s due to web search)
-    const result = await validateIdea(idea, effectivePlan as "free" | "pro" | "elite");
+    const result = await validateIdea(idea, effectivePlan);
 
     // 5. Save the result to Firestore
     const validationId = await saveValidation(userId, idea, result);
@@ -60,6 +60,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "We've hit our API rate limit. Please try again in a minute." },
         { status: 429 }
+      );
+    }
+
+    if (errorMessage.includes("Missing Gemini API key")) {
+      return NextResponse.json(
+        { error: "AI API key is not configured. Please contact support or try again later." },
+        { status: 500 }
       );
     }
     

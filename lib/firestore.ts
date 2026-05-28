@@ -122,7 +122,7 @@ export async function canValidate(userId: string, email: string = ""): Promise<b
   if (isVipEmail(email)) return true;
 
   const profile = await getUserProfile(userId);
-  if (!profile) return false;
+  if (!profile) return true; // Let them through, incrementUsage will auto-provision their profile
 
   const today = new Date().toISOString().split("T")[0];
   const isNewDay = profile.lastValidationDate !== today;

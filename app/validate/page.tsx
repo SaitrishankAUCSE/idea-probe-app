@@ -109,6 +109,11 @@ export default function ValidatePage() {
       return;
     }
 
+    if (usageInfo.plan === "free" && typeof usageInfo.limit === "number" && usageInfo.used >= usageInfo.limit) {
+      router.push("/pricing");
+      return;
+    }
+
     setError("");
     setIsValidating(true);
 
@@ -283,19 +288,18 @@ export default function ValidatePage() {
             {/* Validate button */}
             <button
               onClick={handleValidate}
-              disabled={
-                isValidating ||
-                !idea.trim() ||
-                (usageInfo.plan === "free" &&
-                  typeof usageInfo.limit === "number" &&
-                  usageInfo.used >= usageInfo.limit)
-              }
+              disabled={isValidating || !idea.trim()}
               className="w-full mt-6 py-4 rounded-xl bg-primary hover:bg-primary-light text-white font-bold text-lg transition-all duration-300 shadow-[0_0_30px_rgba(59,130,246,0.2)] hover:shadow-[0_0_50px_rgba(59,130,246,0.4)] hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none flex items-center justify-center gap-3"
             >
               {isValidating ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
                   Analyzing...
+                </>
+              ) : (usageInfo.plan === "free" && typeof usageInfo.limit === "number" && usageInfo.used >= usageInfo.limit) ? (
+                <>
+                  <Zap className="w-5 h-5" />
+                  Limit Reached - Upgrade to Pro
                 </>
               ) : (
                 <>

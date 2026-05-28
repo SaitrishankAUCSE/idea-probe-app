@@ -12,6 +12,16 @@ export async function GET(req: NextRequest) {
     const userId = decoded.uid;
 
     const profile = await getUserProfile(userId);
+    const userEmail = decoded.email || "";
+
+    // VIP emails always get visionary tier — check BEFORE profile null guard
+    if (!profile && isVipEmail(userEmail)) {
+      return NextResponse.json({
+        plan: "visionary",
+        used: 0,
+        limit: "Unlimited",
+      });
+    }
 
     if (!profile) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
@@ -21,8 +31,6 @@ export async function GET(req: NextRequest) {
     const isNewDay = profile.lastValidationDate !== today;
     const currentUsage = isNewDay ? 0 : (profile.validationsToday || 0);
 
-    // VIP emails always get visionary tier
-    const userEmail = decoded.email || "";
     const effectivePlan = isVipEmail(userEmail) ? "visionary" : (profile.plan || "free");
     const isUnlimited = effectivePlan === "elite" || effectivePlan === "visionary";
 

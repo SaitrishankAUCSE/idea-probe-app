@@ -106,11 +106,11 @@ export async function incrementUsage(userId: string): Promise<void> {
 }
 
 export async function canValidate(userId: string, email: string = ""): Promise<boolean> {
+  // VIP emails always get unlimited — check BEFORE profile lookup
+  if (isVipEmail(email)) return true;
+
   const profile = await getUserProfile(userId);
   if (!profile) return false;
-  
-  // VIP emails always get unlimited
-  if (isVipEmail(email)) return true;
 
   const today = new Date().toISOString().split("T")[0];
   const isNewDay = profile.lastValidationDate !== today;

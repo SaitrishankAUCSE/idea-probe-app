@@ -151,8 +151,6 @@ export default function DashboardPage() {
                     )}
                     
                     <div className="flex items-center gap-3 mb-6">
-                      <div className={`p-2.5 rounded-xl ${isPro ? 'bg-amber-500/20 text-amber-500' : 'bg-primary/10 text-primary'}`}>
-                        {isPro ? <Crown className="w-5 h-5" /> : <Activity className="w-5 h-5" />}
                       <div className={`p-2.5 rounded-xl ${isPro || isVisionary ? 'bg-amber-500/20 text-amber-500' : 'bg-primary/10 text-primary'}`}>
                         {isPro || isVisionary ? <Crown className="w-5 h-5" /> : <Activity className="w-5 h-5" />}
                       </div>

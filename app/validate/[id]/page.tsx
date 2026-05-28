@@ -37,7 +37,7 @@ import {
 } from "recharts";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -49,7 +49,7 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { y: 20, opacity: 0 },
   visible: {
     y: 0,
@@ -293,7 +293,7 @@ export default function ResultsPage({
                     {userPlan === "free" && <Lock className="w-3 h-3 ml-1" />}
                   </button>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Overall Score + Archetype */}
               <motion.div variants={itemVariants} className="grid md:grid-cols-2 gap-6">
@@ -303,6 +303,7 @@ export default function ResultsPage({
                     label="Overall Score"
                     size="lg"
                   />
+                  <p className="mt-4 text-foreground-secondary text-center max-w-[250px] text-sm">
                     {validation.result.whyThisScore || (validation.result.overallScore >= 70
                       ? "This idea shows strong potential. The fundamentals are solid."
                       : validation.result.overallScore >= 40
@@ -357,7 +358,7 @@ export default function ResultsPage({
                       <p className="font-semibold text-success">{validation.result.startupArchetype.monetizationPotential}</p>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               )}
 
               {/* Opportunities (NEW) */}

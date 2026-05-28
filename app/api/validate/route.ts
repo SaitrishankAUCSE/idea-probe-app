@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     if (!isVip) {
       const isAllowed = await canValidate(userId, userEmail);
       if (!isAllowed) {
-        return NextResponse.json({ error: "Usage limit exceeded" }, { status: 429 });
+        return NextResponse.json({ error: "Usage limit exceeded" }, { status: 403 });
       }
     }
 

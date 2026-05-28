@@ -146,7 +146,7 @@ function ValidateContent() {
 
       if (!response.ok) {
         const data = await response.json();
-        if (response.status === 429) {
+        if (response.status === 403) {
           if (usageInfo.plan === "pro") {
             setError("You've reached your Pro limit of 50 validations per day. Upgrade to Visionary for unlimited access.");
           } else {

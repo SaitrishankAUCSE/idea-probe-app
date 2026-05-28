@@ -1,0 +1,33 @@
+import { NextRequest, NextResponse } from "next/server";
+
+export async function proxy(req: NextRequest) {
+  const session = req.cookies.get("session")?.value;
+
+  // List of routes that require login
+  const protectedRoutes = ["/dashboard", "/validate", "/history"];
+  const isProtected = protectedRoutes.some(r => req.nextUrl.pathname.startsWith(r));
+
+  if (!isProtected) return NextResponse.next();
+
+  if (!session) {
+    return NextResponse.redirect(new URL("/login?session=expired", req.url));
+  }
+
+  try {
+    // Verify the session cookie using Admin SDK via internal API
+    const res = await fetch(`${req.nextUrl.origin}/api/auth/session-verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session }),
+    });
+
+    if (!res.ok) throw new Error("Invalid session");
+    return NextResponse.next();
+  } catch {
+    return NextResponse.redirect(new URL("/login?session=expired", req.url));
+  }
+}
+
+export const config = {
+  matcher: ["/dashboard/:path*", "/validate/:path*", "/history/:path*"],
+};

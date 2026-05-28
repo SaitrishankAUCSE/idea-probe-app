@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth } from "@/lib/firebase-admin";
 import { validateIdea } from "@/lib/gemini";
-import { saveValidation, canValidate, incrementUsage } from "@/lib/firestore";
+import { saveValidation, canValidate, incrementUsage, getUserProfile, isVipEmail } from "@/lib/firestore";
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,8 +25,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Usage limit exceeded" }, { status: 429 });
     }
 
-    // 4. Call Anthropic Claude API (this takes ~10-20s due to web search)
-    const result = await validateIdea(idea);
+    // Fetch profile to get plan — VIP emails override to visionary
+    const profile = await getUserProfile(userId);
+    const effectivePlan = isVipEmail(profile?.email || "") ? "visionary" : (profile?.plan || "free");
+
+    // 4. Call Gemini AI (this takes ~10-20s due to web search)
+    const result = await validateIdea(idea, effectivePlan as "free" | "pro" | "elite");
 
     // 5. Save the result to Firestore
     const validationId = await saveValidation(userId, idea, result);
@@ -37,11 +41,13 @@ export async function POST(req: NextRequest) {
     // 7. Return success response with ID so client can redirect
     return NextResponse.json({ success: true, validationId });
     
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Validation error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return NextResponse.json(
-      { error: "Failed to validate idea. Please try again." },
+      { error: `Failed to validate idea. (${errorMessage})` },
       { status: 500 }
     );
   }
 }
+

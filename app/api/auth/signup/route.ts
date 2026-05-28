@@ -19,10 +19,12 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, uid: user.uid }, { status: 201 });
-  } catch (error: any) {
-    if (error.code === "auth/email-already-exists")
+  } catch (error: unknown) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const err = error as any;
+    if (err.code === "auth/email-already-exists")
       return NextResponse.json({ error: "Email already in use" }, { status: 409 });
 
-    return NextResponse.json({ error: "Signup failed: " + error.message }, { status: 500 });
+    return NextResponse.json({ error: "Signup failed: " + (err.message || "Unknown error") }, { status: 500 });
   }
 }

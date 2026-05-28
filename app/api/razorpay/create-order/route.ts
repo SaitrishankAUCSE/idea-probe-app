@@ -65,10 +65,23 @@ export async function POST(request: NextRequest) {
 
     const userProfile = userDoc.data();
 
-    // If the user is already Pro, no need to create another order
-    if (userProfile?.plan === "pro") {
+    // --------------------------------------------------
+    // Parse the requested plan from the body
+    // --------------------------------------------------
+    let plan = "pro";
+    try {
+      const body = await request.json();
+      if (body.plan === "visionary" || body.plan === "elite") {
+        plan = "visionary";
+      }
+    } catch {
+      // ignore, default to pro
+    }
+
+    // If the user is already on the requested plan or higher, prevent order
+    if (userProfile?.plan === "visionary" || userProfile?.plan === "elite" || (userProfile?.plan === "pro" && plan === "pro")) {
       return NextResponse.json(
-        { error: "User is already on the Pro plan" },
+        { error: `User is already on the ${userProfile.plan} plan` },
         { status: 400 }
       );
     }
@@ -78,11 +91,13 @@ export async function POST(request: NextRequest) {
     // --------------------------------------------------
     // `receipt` is your internal reference — useful for reconciliation
     // in the Razorpay dashboard. We use the userId so we can trace
-    // which user initiated the payment.
+    // We pass the requested plan in `notes` so verify route knows what to upgrade them to.
+    const amountInPaise = plan === "visionary" ? 2499 * 100 : 900 * 100;
     const order = await razorpay.orders.create({
-      amount: 900 * 100, // ₹900 in paise
+      amount: amountInPaise,
       currency: "INR",
       receipt: `order_${userId}`,
+      notes: { plan },
     });
 
     // --------------------------------------------------

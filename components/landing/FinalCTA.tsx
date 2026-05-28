@@ -23,7 +23,10 @@
 import Link from "next/link";
 import { ArrowRight, Radar } from "lucide-react";
 
+import { useAuth } from "@/lib/auth-context";
+
 export function FinalCTA() {
+  const { user } = useAuth();
   return (
     <section className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8 relative">
       {/* Background gradient */}
@@ -50,10 +53,10 @@ export function FinalCTA() {
 
         {/* CTA Button — extra large for emphasis */}
         <Link
-          href="/signup"
+          href={user ? "/validate" : "/signup"}
           className="group inline-flex items-center gap-3 px-10 py-5 rounded-2xl gradient-primary text-white font-bold text-xl transition-all duration-300 hover:shadow-[0_0_40px_rgba(19,106,183,0.5)] hover:scale-[1.03] active:scale-[0.98]"
         >
-          Validate Your First Idea
+          {user ? "Validate an Idea Now" : "Validate Your First Idea"}
           <ArrowRight className="w-6 h-6 transition-transform group-hover:translate-x-1" />
         </Link>
 

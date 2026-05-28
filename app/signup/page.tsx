@@ -9,7 +9,7 @@ import { Radar, Mail, Lock, Eye, EyeOff, Loader2, User } from "lucide-react";
 function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, loading, signInWithGoogle, signUpWithEmail, signOut } = useAuth();
+  const { user, loading, profileVerified, signInWithGoogle, signUpWithEmail, signOut } = useAuth();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -22,11 +22,12 @@ function SignupForm() {
   useEffect(() => {
     if (searchParams.get("session") === "expired" && user) {
       signOut();
-      setError("Your session expired. Please sign up or log in again.");
-    } else if (user && !loading && !isSubmitting) {
-      router.push("/validate");
+      setTimeout(() => setError("Your session expired. Please sign up or log in again."), 0);
+    } else if (user && profileVerified && !loading && !isSubmitting) {
+      // User is already logged in AND verified — redirect to pricing
+      window.location.href = "/pricing";
     }
-  }, [user, loading, router, searchParams, signOut, isSubmitting]);
+  }, [user, loading, profileVerified, router, searchParams, signOut, isSubmitting]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +45,7 @@ function SignupForm() {
     setIsSubmitting(true);
     try {
       await signUpWithEmail(name, email, password);
+      // Email signup signs out the user — redirect to login with success message
       router.push("/login?registered=true");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Signup failed";
@@ -66,7 +68,8 @@ function SignupForm() {
     setIsSubmitting(true);
     try {
       await signInWithGoogle(true);
-      router.push("/validate");
+      // Google signup creates profile + logs in immediately (no separate login needed)
+      window.location.href = "/pricing";
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("popup-closed-by-user")) return;
@@ -74,7 +77,7 @@ function SignupForm() {
         setError("You already have an account. Please sign in instead.");
         return;
       }
-      setError("Google sign-up failed. Please try again.");
+      setError(`Google sign-up failed. Please try again. (${msg})`);
     } finally {
       setIsSubmitting(false);
     }
@@ -88,7 +91,8 @@ function SignupForm() {
     );
   }
 
-  if (user) {
+  // Already authenticated and verified — show spinner while redirect happens
+  if (user && profileVerified) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -123,7 +127,8 @@ function SignupForm() {
           {/* Google */}
           <button
             onClick={handleGoogleSignup}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-background border border-border hover:border-border-hover transition-all duration-200 font-medium"
+            disabled={isSubmitting}
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-background border border-border hover:border-border-hover transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />

@@ -1,46 +1,22 @@
-/* ============================================
-   FIRESTORE HELPERS — lib/firestore.ts
-   ============================================
-   
-   🎓 TEACHING NOTES:
-   
-   This file contains all our database operations.
-   We centralize them here so our components don't have
-   Firestore-specific code scattered everywhere.
-   
-   Data Structure:
-   - Collection: "users"
-     - Document: {uid} (User profile)
-       - Subcollection: "validations"
-         - Document: {autoId} (Validation result)
-         
-   Why use subcollections?
-   It makes security rules easy: "A user can only read/write
-   validations that belong to their own UID."
-   ============================================ */
-
-import { db } from "./firebase";
-import {
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  collection,
-  addDoc,
-  query,
-  orderBy,
-  getDocs,
-  serverTimestamp,
-} from "firebase/firestore";
+import { adminDb } from "./firebase-admin";
 import type { UserProfile, ValidationResult, ValidationDoc } from "@/types";
 
-/* --- User Profile --- */
+/** VIP accounts that always get Visionary-tier access regardless of Firestore plan */
+const VIP_EMAILS = [
+  "saitrishankb9@gmail.com",
+  "bannusai899@gmail.com",
+];
+
+/** Check if an email is a VIP account */
+export function isVipEmail(email: string): boolean {
+  return VIP_EMAILS.includes(email.toLowerCase());
+}
 
 export async function getUserProfile(userId: string): Promise<UserProfile | null> {
-  const docRef = doc(db, "users", userId);
-  const docSnap = await getDoc(docRef);
+  const docRef = adminDb.collection("users").doc(userId);
+  const docSnap = await docRef.get();
   
-  if (docSnap.exists()) {
+  if (docSnap.exists) {
     return docSnap.data() as UserProfile;
   }
   return null;
@@ -50,11 +26,15 @@ export async function updateUserProfile(
   userId: string,
   data: Partial<UserProfile>
 ): Promise<void> {
-  const docRef = doc(db, "users", userId);
-  await updateDoc(docRef, {
+  const docRef = adminDb.collection("users").doc(userId);
+  // We use FieldValue.serverTimestamp() from firebase-admin, or just let it update without it for simplicity
+  // since this is just a counter update usually
+  const { FieldValue } = await import("firebase-admin/firestore");
+  
+  await docRef.set({
     ...data,
-    updatedAt: serverTimestamp(),
-  });
+    updatedAt: FieldValue.serverTimestamp(),
+  }, { merge: true });
 }
 
 /* --- Validations --- */
@@ -64,10 +44,9 @@ export async function saveValidation(
   ideaText: string,
   result: ValidationResult
 ): Promise<string> {
-  // Add to the user's "validations" subcollection
-  const validationsRef = collection(db, "users", userId, "validations");
+  const validationsRef = adminDb.collection("users").doc(userId).collection("validations");
   
-  const docRef = await addDoc(validationsRef, {
+  const docRef = await validationsRef.add({
     userId,
     ideaText,
     result,
@@ -79,10 +58,9 @@ export async function saveValidation(
 }
 
 export async function getValidations(userId: string): Promise<ValidationDoc[]> {
-  const validationsRef = collection(db, "users", userId, "validations");
-  const q = query(validationsRef, orderBy("createdAt", "desc"));
+  const validationsRef = adminDb.collection("users").doc(userId).collection("validations");
+  const querySnapshot = await validationsRef.orderBy("createdAt", "desc").get();
   
-  const querySnapshot = await getDocs(q);
   const validations: ValidationDoc[] = [];
   
   querySnapshot.forEach((doc) => {
@@ -99,10 +77,10 @@ export async function getValidation(
   userId: string,
   validationId: string
 ): Promise<ValidationDoc | null> {
-  const docRef = doc(db, "users", userId, "validations", validationId);
-  const docSnap = await getDoc(docRef);
+  const docRef = adminDb.collection("users").doc(userId).collection("validations").doc(validationId);
+  const docSnap = await docRef.get();
   
-  if (docSnap.exists()) {
+  if (docSnap.exists) {
     return {
       id: docSnap.id,
       ...docSnap.data(),
@@ -117,8 +95,12 @@ export async function incrementUsage(userId: string): Promise<void> {
   const profile = await getUserProfile(userId);
   if (!profile) return;
   
+  const today = new Date().toISOString().split("T")[0];
+  const isNewDay = profile.lastValidationDate !== today;
+  
   await updateUserProfile(userId, {
-    validationsThisMonth: (profile.validationsThisMonth || 0) + 1,
+    validationsToday: isNewDay ? 1 : (profile.validationsToday || 0) + 1,
+    lastValidationDate: today,
   });
 }
 
@@ -126,9 +108,19 @@ export async function canValidate(userId: string): Promise<boolean> {
   const profile = await getUserProfile(userId);
   if (!profile) return false;
   
-  // Pro users have no limits
-  if (profile.plan === "pro") return true;
+  // VIP emails always get unlimited
+  if (isVipEmail(profile.email)) return true;
+
+  const today = new Date().toISOString().split("T")[0];
+  const isNewDay = profile.lastValidationDate !== today;
+  const currentUsage = isNewDay ? 0 : (profile.validationsToday || 0);
   
-  // Free users get 3 per month
-  return (profile.validationsThisMonth || 0) < 3;
+  // Elite/Visionary users get unlimited
+  if (profile.plan === "elite" || profile.plan === "visionary") return true;
+
+  // Pro users get 10 per day
+  if (profile.plan === "pro") return currentUsage < 10;
+  
+  // Free users get 3 per day
+  return currentUsage < 3;
 }

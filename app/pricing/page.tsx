@@ -31,10 +31,12 @@ const plans = [
   {
     name: "Free",
     price: "₹0",
+    annualPrice: "₹0",
     period: "forever",
+    annualPeriod: "forever",
     description: "Perfect for testing the waters",
     features: [
-      "3 validations per month",
+      "3 validations per day",
       "Competitor scan",
       "Risk score",
       "Basic report",
@@ -45,17 +47,37 @@ const plans = [
   {
     name: "Pro",
     price: "₹900",
+    annualPrice: "₹750",
     period: "/month",
+    annualPeriod: "/mo, billed annually",
     description: "For serious founders building real products",
     features: [
-      "Unlimited validations",
+      "10 validations per day",
       "Deep web search",
       "Full PDF report",
-      "Save & compare ideas",
+      "CSV competitor/risk export",
       "Priority analysis",
     ],
     priceId: "pro",
     popular: true,
+  },
+  {
+    name: "Visionary",
+    price: "₹2,499",
+    annualPrice: "₹1,999",
+    period: "/month",
+    annualPeriod: "/mo, billed annually",
+    description: "For power users launching multiple projects",
+    features: [
+      "Unlimited validations",
+      "Advanced Reasoning AI (Gemini 2.5 Pro)",
+      "Deep-dive SWOT Analysis",
+      "Actionable Pivot Suggestions",
+      "Full PDF & CSV export",
+      "Priority founder support",
+    ],
+    priceId: "visionary",
+    popular: false,
   },
 ];
 
@@ -69,12 +91,16 @@ const faqs = [
     a: "We use Gemini AI equipped with Google Search grounding. It actively searches for your specific idea, finds live competitors, and extracts market data on the fly.",
   },
   {
+    q: "What is the difference between standard and advanced AI?",
+    a: "Our Free and Pro tiers use Gemini 2.5 Flash for fast, comprehensive validations. The Visionary plan utilizes Google's state-of-the-art reasoning model (Gemini 2.5 Pro) to perform ultra-deep logical deductions and SWOT analysis.",
+  },
+  {
     q: "Can I cancel anytime?",
-    a: "Yes. You can manage your subscription or cancel anytime. Contact support@ideaprobe.io and we'll handle it immediately. No questions asked.",
+    a: "Yes. You can manage your subscription or cancel anytime. Contact support@ideaprobe.io and we&apos;ll handle it immediately. No questions asked.",
   },
   {
     q: "What's in the PDF report?",
-    a: "The Pro plan includes a downloadable PDF containing your full scorecard, competitor links, risk mitigation strategies, and an executive summary. Perfect for sharing with co-founders or investors.",
+    a: "The Pro and Visionary plans include a downloadable PDF containing your full scorecard, competitor links, risk mitigation strategies, and an executive summary. Perfect for sharing with co-founders or investors.",
   },
   {
     q: "How are payments processed?",
@@ -85,6 +111,7 @@ const faqs = [
 /* Load Razorpay checkout script dynamically */
 const loadRazorpay = (): Promise<boolean> =>
   new Promise((resolve) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((window as any).Razorpay) {
       resolve(true);
       return;
@@ -100,6 +127,7 @@ export default function PricingPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [isAnnual, setIsAnnual] = useState(false);
 
   /* Handle clicking a plan button */
   const handleSelectPlan = async (priceId: string) => {
@@ -109,13 +137,13 @@ export default function PricingPage() {
       return;
     }
 
-    // If selecting free, just go to validate
+    // If selecting free, just go to dashboard
     if (priceId === "free") {
-      router.push("/validate");
+      router.push("/dashboard");
       return;
     }
 
-    // If selecting pro, start Razorpay Checkout
+    // If selecting pro/elite, start Razorpay Checkout
     setLoadingPlan(priceId);
     try {
       const loaded = await loadRazorpay();
@@ -126,6 +154,10 @@ export default function PricingPage() {
 
       const res = await fetch("/api/razorpay/create-order", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ plan: priceId }),
       });
       const data = await res.json();
 
@@ -134,8 +166,9 @@ export default function PricingPage() {
         amount: data.amount,
         currency: data.currency,
         name: "IdeaProbe",
-        description: "Pro Plan — Unlimited Validations",
+        description: `${priceId.charAt(0).toUpperCase() + priceId.slice(1)} Plan — Subscription`,
         order_id: data.orderId,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         handler: async (response: any) => {
           // Verify payment on server
           const verifyRes = await fetch("/api/razorpay/verify", {
@@ -155,6 +188,7 @@ export default function PricingPage() {
         theme: { color: "#16A34A" },
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rzp = new (window as any).Razorpay(options);
       rzp.open();
     } catch (err) {
@@ -169,59 +203,85 @@ export default function PricingPage() {
     <div className="min-h-screen pt-24 pb-16 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-16 relative">
+          {user && (
+            <button 
+              onClick={() => router.push("/dashboard")}
+              className="absolute right-0 top-0 text-sm text-foreground-secondary hover:text-primary transition-colors"
+            >
+              Skip for now →
+            </button>
+          )}
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">
             Simple, honest <span className="gradient-text">pricing</span>
           </h1>
-          <p className="text-foreground-secondary text-lg max-w-xl mx-auto">
-            Start free. Upgrade when you're ready to get serious.
+          <p className="text-foreground-secondary text-lg max-w-xl mx-auto mb-10">
+            Start free. Upgrade when you&apos;re ready to get serious.
             No hidden fees, cancel anytime.
           </p>
+          
+          {/* Billing Toggle */}
+          <div className="flex items-center justify-center gap-4">
+            <span className={`text-sm font-medium transition-colors ${!isAnnual ? "text-foreground" : "text-foreground-tertiary"}`}>Monthly</span>
+            <button
+              onClick={() => setIsAnnual(!isAnnual)}
+              className="relative w-14 h-7 rounded-full bg-background-secondary border border-border p-1 transition-colors hover:border-primary/50"
+            >
+              <div 
+                className={`w-5 h-5 rounded-full gradient-primary transition-all duration-300 shadow-md ${isAnnual ? "translate-x-7" : "translate-x-0"}`} 
+              />
+            </button>
+            <span className={`text-sm font-medium flex items-center gap-1.5 transition-colors ${isAnnual ? "text-foreground" : "text-foreground-tertiary"}`}>
+              Annually <span className="text-[10px] uppercase font-bold bg-success/15 text-success px-1.5 py-0.5 rounded-full">Save 20%</span>
+            </span>
+          </div>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-24">
+        <div className="grid lg:grid-cols-3 gap-8 max-w-6xl mx-auto mb-24">
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`relative glass rounded-3xl p-8 sm:p-10 transition-all duration-300 ${
+              className={`relative glass rounded-3xl p-8 sm:p-10 transition-all duration-300 flex flex-col justify-between ${
                 plan.popular
-                  ? "border-primary/40 ring-1 ring-primary/20 shadow-[0_0_40px_rgba(22,163,74,0.1)] scale-100 md:scale-105 z-10"
+                  ? "border-primary/45 ring-1 ring-primary/25 shadow-[0_0_40px_rgba(22,163,74,0.12)] lg:scale-105 z-10"
                   : "border-border"
               }`}
             >
-              {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full gradient-primary text-white text-sm font-bold flex items-center gap-1.5 shadow-lg">
-                  <Sparkles className="w-4 h-4" />
-                  Most Popular
+              <div>
+                {plan.popular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full gradient-primary text-white text-sm font-bold flex items-center gap-1.5 shadow-lg">
+                    <Sparkles className="w-4 h-4" />
+                    Most Popular
+                  </div>
+                )}
+
+                <div className="mb-8">
+                  <div className="flex items-center gap-2 mb-2">
+                    {plan.popular && <Zap className="w-6 h-6 text-primary" />}
+                    <h2 className="text-2xl font-bold">{plan.name}</h2>
+                  </div>
+                  <p className="text-foreground-secondary">{plan.description}</p>
                 </div>
-              )}
 
-              <div className="mb-8">
-                <div className="flex items-center gap-2 mb-2">
-                  {plan.popular && <Zap className="w-6 h-6 text-primary" />}
-                  <h2 className="text-2xl font-bold">{plan.name}</h2>
+                <div className="mb-8">
+                  <span className="text-5xl font-bold">{isAnnual ? plan.annualPrice : plan.price}</span>
+                  <span className="text-foreground-secondary text-lg ml-1">
+                    {isAnnual ? plan.annualPeriod : plan.period}
+                  </span>
                 </div>
-                <p className="text-foreground-secondary">{plan.description}</p>
-              </div>
 
-              <div className="mb-8">
-                <span className="text-6xl font-bold">{plan.price}</span>
-                <span className="text-foreground-secondary text-lg ml-1">
-                  {plan.period}
-                </span>
+                <ul className="space-y-4 mb-10">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-3">
+                      <div className={`mt-1 rounded-full p-0.5 ${plan.popular ? "bg-primary/20 text-primary" : "bg-success/20 text-success"}`}>
+                        <Check className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-foreground-secondary">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-
-              <ul className="space-y-4 mb-10">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-3">
-                    <div className={`mt-1 rounded-full p-0.5 ${plan.popular ? "bg-primary/20 text-primary" : "bg-success/20 text-success"}`}>
-                      <Check className="w-3.5 h-3.5" />
-                    </div>
-                    <span className="text-foreground-secondary">{feature}</span>
-                  </li>
-                ))}
-              </ul>
 
               <button
                 onClick={() => handleSelectPlan(plan.priceId)}
@@ -229,13 +289,13 @@ export default function PricingPage() {
                 className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 ${
                   plan.popular
                     ? "gradient-primary text-white hover:shadow-[0_0_30px_rgba(22,163,74,0.4)] hover:scale-[1.02]"
-                    : "glass text-foreground hover:bg-border-hover"
+                    : "glass text-foreground hover:bg-border-hover hover:scale-[1.01]"
                 }`}
               >
                 {loadingPlan === plan.priceId ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  plan.name === "Free" ? "Get Started" : "Upgrade to Pro"
+                  plan.name === "Free" ? (user ? "Continue Free" : "Get Started") : `Upgrade to ${plan.name}`
                 )}
               </button>
             </div>

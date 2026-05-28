@@ -45,7 +45,7 @@
  */
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 /**
@@ -95,6 +95,7 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
  * gets the same instance, so auth state is consistent across the app.
  */
 export const auth = getAuth(app);
+setPersistence(auth, browserLocalPersistence).catch(console.error);
 
 /**
  * Firestore database instance.

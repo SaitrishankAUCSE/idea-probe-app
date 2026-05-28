@@ -9,7 +9,7 @@ import { Radar, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, loading, signInWithGoogle, signInWithEmail, signOut } = useAuth();
+  const { user, loading, profileVerified, signInWithGoogle, signInWithEmail, signOut } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,26 +26,32 @@ function LoginForm() {
       window.history.replaceState({}, document.title, url.toString());
       
       if (user) signOut();
-      setError("Your session expired. Please sign in again.");
+      setTimeout(() => setError("Your session expired. Please sign in again."), 0);
     } else if (searchParams.get("registered") === "true") {
       const url = new URL(window.location.href);
       url.searchParams.delete("registered");
       window.history.replaceState({}, document.title, url.toString());
       
-      setSuccessMsg("Account created successfully! Please log in to continue.");
-    } else if (user && !loading && !isSubmitting) {
-      router.push("/validate");
+      setTimeout(() => setSuccessMsg("Account created successfully! Please check your inbox for a verification email, then log in."), 0);
+    } else if (user && profileVerified && !loading && !isSubmitting) {
+      // User is already logged in AND verified — redirect to pricing.
+      // This only fires for returning users, NOT during active login flow
+      // because profileVerified is only set after we confirm the Firestore record
+      window.location.href = "/pricing";
     }
-  }, [user, loading, router, searchParams, signOut, isSubmitting]);
+  }, [user, loading, profileVerified, router, searchParams, signOut, isSubmitting]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccessMsg("");
     setIsSubmitting(true);
 
     try {
       await signInWithEmail(email, password);
-      router.push("/validate");
+      // signInWithEmail sets profileVerified=true on success,
+      // but we also redirect explicitly here      // Successful email login
+      window.location.href = "/pricing";
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Login failed";
       if (msg.includes("account-not-found") || msg.includes("user-not-found")) {
@@ -64,10 +70,16 @@ function LoginForm() {
 
   const handleGoogleLogin = async () => {
     setError("");
+    setSuccessMsg("");
     setIsSubmitting(true);
     try {
       await signInWithGoogle(false);
-      router.push("/validate");
+      // signInWithGoogle(false) only resolves successfully if:
+      // 1. Google popup succeeded
+      // 2. Firestore profile exists (user previously signed up)
+      // 3. Session cookie created
+      // 4. profileVerified set to true
+      window.location.href = "/pricing";
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("popup-closed-by-user")) return;
@@ -89,7 +101,8 @@ function LoginForm() {
     );
   }
 
-  if (user) {
+  // Already authenticated and verified — show spinner while redirect happens
+  if (user && profileVerified) {
     return (
       <div className="min-h-[80vh] flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -124,7 +137,8 @@ function LoginForm() {
           {/* Google */}
           <button
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-background border border-border hover:border-border-hover transition-all duration-200 font-medium"
+            disabled={isSubmitting}
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-background border border-border hover:border-border-hover transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />

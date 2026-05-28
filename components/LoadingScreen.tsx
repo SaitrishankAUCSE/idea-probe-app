@@ -117,7 +117,7 @@ export function LoadingScreen({
 
   useEffect(() => {
     if (!isVisible) {
-      setProgress(0);
+      setTimeout(() => setProgress(0), 0);
       return;
     }
 

@@ -24,42 +24,60 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Check, Sparkles, Zap } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 const plans = [
   {
     name: "Free",
-    price: "$0",
+    price: "₹0",
     period: "forever",
     description: "Perfect for testing the waters",
     features: [
-      "3 validations per month",
+      "3 validations per day",
       "Competitor scan",
       "Risk score",
       "Basic report",
     ],
     cta: "Get Started",
-    ctaHref: "/signup",
+    priceId: "free",
     popular: false,
   },
   {
     name: "Pro",
-    price: "$9",
+    price: "₹900",
     period: "/month",
     description: "For serious founders building real products",
     features: [
-      "Unlimited validations",
+      "10 validations per day",
       "Deep web search",
       "Full PDF report",
-      "Save & compare ideas",
+      "CSV competitor/risk export",
       "Priority analysis",
     ],
     cta: "Upgrade to Pro",
-    ctaHref: "/signup",
+    priceId: "pro",
     popular: true,
+  },
+  {
+    name: "Elite",
+    price: "₹1,900",
+    period: "/month",
+    description: "For power users launching multiple projects",
+    features: [
+      "Unlimited validations",
+      "Advanced Reasoning AI (Gemini Pro)",
+      "Deep-dive SWOT Analysis",
+      "Full PDF & CSV export",
+      "Priority founder support",
+    ],
+    cta: "Upgrade to Elite",
+    priceId: "elite",
+    popular: false,
   },
 ];
 
 export function PricingPreview() {
+  const { user } = useAuth();
   const sectionRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
@@ -83,7 +101,7 @@ export function PricingPreview() {
 
   return (
     <section ref={sectionRef} className="py-24 sm:py-32 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Section header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">
@@ -95,13 +113,13 @@ export function PricingPreview() {
         </div>
 
         {/* Pricing cards */}
-        <div className="grid sm:grid-cols-2 gap-6 lg:gap-8">
+        <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
           {plans.map((plan, index) => (
             <div
               key={plan.name}
-              className={`relative glass rounded-2xl p-8 transition-all duration-700 ${
+              className={`relative glass rounded-2xl p-8 transition-all duration-700 flex flex-col justify-between ${
                 plan.popular
-                  ? "border-primary/40 ring-1 ring-primary/20"
+                  ? "border-primary/40 ring-1 ring-primary/20 shadow-[0_0_30px_rgba(22,163,74,0.05)]"
                   : "border-border"
               } ${
                 isVisible
@@ -110,66 +128,72 @@ export function PricingPreview() {
               }`}
               style={{ transitionDelay: `${index * 200}ms` }}
             >
-              {/* Popular badge */}
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full gradient-primary text-white text-sm font-semibold flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Popular
+              <div>
+                {/* Popular badge */}
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full gradient-primary text-white text-sm font-semibold flex items-center gap-1.5 shadow-md">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Popular
+                  </div>
+                )}
+
+                {/* Plan name */}
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    {plan.popular ? (
+                      <Zap className="w-5 h-5 text-primary" />
+                    ) : null}
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {plan.name}
+                    </h3>
+                  </div>
+                  <p className="text-sm text-foreground-tertiary">
+                    {plan.description}
+                  </p>
                 </div>
-              )}
 
-              {/* Plan name */}
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-2">
-                  {plan.popular ? (
-                    <Zap className="w-5 h-5 text-primary" />
-                  ) : null}
-                  <h3 className="text-lg font-semibold text-foreground">
-                    {plan.name}
-                  </h3>
+                {/* Price */}
+                <div className="mb-8">
+                  <span className="text-4xl font-bold text-foreground">
+                    {plan.price}
+                  </span>
+                  <span className="text-foreground-secondary ml-1 text-sm">
+                    {plan.period}
+                  </span>
                 </div>
-                <p className="text-sm text-foreground-tertiary">
-                  {plan.description}
-                </p>
-              </div>
 
-              {/* Price */}
-              <div className="mb-8">
-                <span className="text-5xl font-bold text-foreground">
-                  {plan.price}
-                </span>
-                <span className="text-foreground-secondary ml-1">
-                  {plan.period}
-                </span>
+                {/* Features list */}
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((feature) => (
+                    <li
+                      key={feature}
+                      className="flex items-center gap-3 text-foreground-secondary"
+                    >
+                      <Check
+                        className={`w-4 h-4 flex-shrink-0 ${
+                          plan.popular ? "text-primary" : "text-success"
+                        }`}
+                      />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-
-              {/* Features list */}
-              <ul className="space-y-3 mb-8">
-                {plan.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-center gap-3 text-foreground-secondary"
-                  >
-                    <Check
-                      className={`w-4 h-4 flex-shrink-0 ${
-                        plan.popular ? "text-primary" : "text-success"
-                      }`}
-                    />
-                    <span className="text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
 
               {/* CTA button */}
               <Link
-                href={plan.ctaHref}
+                href={
+                  plan.priceId === "free"
+                    ? (user ? "/validate" : "/signup")
+                    : (user ? "/pricing" : "/signup")
+                }
                 className={`block text-center py-3 rounded-xl font-semibold transition-all duration-300 ${
                   plan.popular
                     ? "gradient-primary text-white hover:shadow-[0_0_30px_rgba(19,106,183,0.3)] hover:scale-[1.02]"
                     : "bg-background-tertiary text-foreground hover:bg-border-hover"
                 }`}
               >
-                {plan.cta}
+                {plan.priceId === "free" && user ? "Validate an Idea" : plan.cta}
               </Link>
             </div>
           ))}

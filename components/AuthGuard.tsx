@@ -9,18 +9,17 @@
  * Wraps any page that requires authentication. It has three states:
  * 1. **Loading** → shows a shimmer skeleton (auth state resolving)
  * 2. **Not authenticated** → redirects to /login
- * 3. **Authenticated** → renders children
+ * 3. **Authenticated & verified** → renders children
  *
  * DESIGN DECISIONS:
  * 1. **Shimmer loading state** — instead of a blank screen while Firebase
  *    resolves auth, we show a beautiful skeleton with the `.shimmer` class.
  *    This prevents layout shift and feels intentional.
  *
- * 2. **Redirect via next/navigation** — `redirect()` is the App Router way
- *    to do server-style redirects from client components. However, since
- *    we're in a client component with `useAuth()`, we use `useEffect` +
- *    `router.replace()` for a clean client-side redirect that doesn't
- *    flash content.
+ * 2. **profileVerified check** — we don't just check if `user` exists in
+ *    Firebase Auth. We also require `profileVerified` which confirms the
+ *    user has a Firestore profile (i.e., they actually signed up). This
+ *    prevents ghost users from accessing protected routes.
  *
  * 3. **Wrapper pattern** — AuthGuard doesn't render its own layout.
  *    It either renders children or a loading state. This makes it
@@ -46,7 +45,7 @@ interface AuthGuardProps {
 /* ── Component ─────────────────────────────── */
 
 export function AuthGuard({ children }: AuthGuardProps) {
-  const { user, loading } = useAuth();
+  const { user, loading, profileVerified } = useAuth();
   const router = useRouter();
 
   /*
@@ -58,12 +57,16 @@ export function AuthGuard({ children }: AuthGuardProps) {
    *
    * `replace` (not `push`) ensures the login page replaces the protected
    * route in history — pressing Back won't loop back to the guard.
+   *
+   * We check both `user` and `profileVerified`:
+   * - `user` = Firebase Auth knows about this person
+   * - `profileVerified` = they have a Firestore profile (actually signed up)
    */
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && (!user || !profileVerified)) {
       router.replace("/login");
     }
-  }, [user, loading, router]);
+  }, [user, loading, profileVerified, router]);
 
   /* ── Loading State: Shimmer Skeleton ── */
   if (loading) {
@@ -95,14 +98,14 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  /* ── Not authenticated: show nothing while redirect happens ──
+  /* ── Not authenticated or not verified: show nothing while redirect happens ──
    * We return null here because the useEffect above is already
    * redirecting. Rendering anything would cause a content flash.
    */
-  if (!user) {
+  if (!user || !profileVerified) {
     return null;
   }
 
-  /* ── Authenticated: render the protected content ── */
+  /* ── Authenticated & verified: render the protected content ── */
   return <>{children}</>;
 }

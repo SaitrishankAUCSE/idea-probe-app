@@ -31,6 +31,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import crypto from "crypto";
 import { adminAuth, adminDb } from "@/lib/firebase-admin";
+import { razorpay } from "@/lib/razorpay";
 
 export async function POST(request: NextRequest) {
   try {
@@ -89,15 +90,19 @@ export async function POST(request: NextRequest) {
     }
 
     // --------------------------------------------------
-    // Step 4: Signature valid → Upgrade user to Pro
+    // Step 4: Signature valid → Fetch order notes to find plan
     // --------------------------------------------------
-    // We use the Admin SDK's Firestore to update the user's plan.
-    // This bypasses security rules (intentionally — the server verified payment).
+    const order = await razorpay.orders.fetch(razorpay_order_id);
+    const plan = (order as { notes?: { plan?: string } }).notes?.plan || "pro";
+
+    // --------------------------------------------------
+    // Step 5: Upgrade user to the correct plan
+    // --------------------------------------------------
     await adminDb
       .collection("users")
       .doc(userId)
       .update({
-        plan: "pro",
+        plan: plan === "elite" ? "elite" : "pro",
         razorpayCustomerId: razorpay_payment_id,
         updatedAt: new Date(),
       });

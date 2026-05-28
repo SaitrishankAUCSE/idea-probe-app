@@ -31,7 +31,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { AuthGuard } from "@/components/AuthGuard";
-import { LoadingScreen } from "@/components/LoadingScreen";
+import { AILoadingAnimation } from "@/components/AILoadingAnimation";
 import {
   Radar,
   Lightbulb,
@@ -39,6 +39,7 @@ import {
   Sparkles,
   Loader2,
   Zap,
+  CheckCircle2,
 } from "lucide-react";
 
 /* Helpful tips that rotate — teach users how to write better prompts */
@@ -59,9 +60,9 @@ export default function ValidatePage() {
   const [error, setError] = useState("");
   const [currentTip, setCurrentTip] = useState(0);
   const [usageInfo, setUsageInfo] = useState({
+    plan: "free" as "free" | "pro" | "elite",
     used: 0,
-    limit: 3,
-    plan: "free" as "free" | "pro",
+    limit: 3 as number | "Unlimited",
   });
 
   /* Rotate tips every 4 seconds */
@@ -146,8 +147,8 @@ export default function ValidatePage() {
 
   return (
     <AuthGuard>
-      {/* Loading screen overlay — shows animated radar while AI analyzes */}
-      <LoadingScreen isVisible={isValidating} />
+      {/* Loading screen overlay — shows premium animation while AI analyzes */}
+      <AILoadingAnimation isVisible={isValidating} />
 
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
         {/* Background decorations */}
@@ -175,17 +176,22 @@ export default function ValidatePage() {
           <div className="glass rounded-2xl p-6 sm:p-8">
             {/* Usage counter */}
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2 text-sm">
-                {usageInfo.plan === "pro" ? (
-                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary font-medium">
-                    <Zap className="w-3.5 h-3.5" />
-                    Pro — Unlimited
-                  </span>
+              <div className="absolute top-4 right-4 text-sm font-medium">
+                {usageInfo.plan === "elite" ? (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Elite: Unlimited</span>
+                  </div>
+                ) : usageInfo.plan === "pro" ? (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Pro: {usageInfo.used}/{usageInfo.limit} used today</span>
+                  </div>
                 ) : (
                   <span className="text-foreground-secondary">
                     <span
                       className={
-                        usageInfo.used >= usageInfo.limit
+                        typeof usageInfo.limit === "number" && usageInfo.used >= usageInfo.limit
                           ? "text-danger font-semibold"
                           : "text-foreground"
                       }
@@ -198,6 +204,7 @@ export default function ValidatePage() {
               </div>
 
               {usageInfo.plan === "free" &&
+                typeof usageInfo.limit === "number" &&
                 usageInfo.used >= usageInfo.limit && (
                   <a
                     href="/pricing"
@@ -256,7 +263,8 @@ export default function ValidatePage() {
               disabled={
                 isValidating ||
                 !idea.trim() ||
-                (usageInfo.plan === "free" &&
+                (usageInfo.plan !== "elite" &&
+                  typeof usageInfo.limit === "number" &&
                   usageInfo.used >= usageInfo.limit)
               }
               className="w-full mt-6 py-4 rounded-xl gradient-primary text-white font-bold text-lg transition-all duration-300 hover:shadow-[0_0_30px_rgba(19,106,183,0.4)] hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none flex items-center justify-center gap-3"

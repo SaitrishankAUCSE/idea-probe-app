@@ -129,6 +129,6 @@ if (getApps().length === 0) {
  *   const decoded = await adminAuth.verifyIdToken(token);
  *   // decoded.uid is guaranteed to be the real user
  */
-export const adminAuth = getApps().length > 0 ? getAuth() : ({} as any);
+export const adminAuth = getApps().length > 0 ? getAuth() : ({} as unknown as ReturnType<typeof getAuth>);
 
-export const adminDb = getApps().length > 0 ? getFirestore() : ({} as any);
+export const adminDb = getApps().length > 0 ? getFirestore() : ({} as unknown as ReturnType<typeof getFirestore>);

@@ -9,8 +9,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No token" }, { status: 400 });
 
   try {
-    // Session cookie lasts 5 days
-    const expiresIn = 60 * 60 * 24 * 5 * 1000;
+    // Session cookie lasts 14 days (Firebase maximum)
+    const expiresIn = 60 * 60 * 24 * 14 * 1000;
     const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
 
     const response = NextResponse.json({ success: true });
@@ -22,9 +22,10 @@ export async function POST(req: NextRequest) {
       path: "/",
     });
     return response;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Session creation error:", error);
-    return NextResponse.json({ error: "Failed to create session" }, { status: 401 });
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: `Failed to create session: ${errorMessage}` }, { status: 401 });
   }
 }
 

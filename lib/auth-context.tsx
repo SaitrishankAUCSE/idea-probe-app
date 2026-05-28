@@ -6,6 +6,7 @@ import {
   useEffect,
   useState,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
 
@@ -18,7 +19,8 @@ import {
   signOut as firebaseSignOut,
   updateProfile,
   GoogleAuthProvider,
-  getAdditionalUserInfo,
+  deleteUser,
+  sendEmailVerification,
   type User,
 } from "firebase/auth";
 
@@ -30,6 +32,7 @@ import { auth, db } from "@/lib/firebase";
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  profileVerified: boolean;
   error: string | null;
   signInWithGoogle: (isSignUp?: boolean) => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
@@ -63,39 +66,46 @@ async function createSessionCookie(user: User): Promise<void> {
   }
 }
 
-/* ── Helper: create Firestore profile and track login ──────── */
-async function ensureUserProfile(firebaseUser: User, isSignUp: boolean = false): Promise<void> {
-  const userRef = doc(db, "users", firebaseUser.uid);
+/* ── Helper: check if Firestore profile exists ─────────── */
+async function checkProfileExists(uid: string): Promise<boolean> {
+  const userRef = doc(db, "users", uid);
   const userSnap = await getDoc(userRef);
+  return userSnap.exists();
+}
 
-  if (!userSnap.exists()) {
-    if (!isSignUp) {
-      throw new Error("account-not-found");
-    }
-    await setDoc(userRef, {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email,
-      displayName:
-        firebaseUser.displayName ||
-        firebaseUser.email?.split("@")[0] ||
-        "Anonymous",
-      plan: "free",
-      validationsThisMonth: 0,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
+/* ── Helper: create Firestore profile ──────── */
+async function createUserProfile(firebaseUser: User, provider: 'email' | 'google', avatar: string): Promise<void> {
+  const userRef = doc(db, "users", firebaseUser.uid);
+  await setDoc(userRef, {
+    uid: firebaseUser.uid,
+    email: firebaseUser.email,
+    displayName:
+      firebaseUser.displayName ||
+      firebaseUser.email?.split("@")[0] ||
+      "Anonymous",
+    provider,
+    role: "user",
+    avatar,
+    plan: "free",
+    validationsThisMonth: 0,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    lastLoginAt: serverTimestamp(),
+    loginCount: 1,
+  });
+}
+
+/* ── Helper: track login in Firestore ──────── */
+async function trackLogin(uid: string): Promise<void> {
+  const userRef = doc(db, "users", uid);
+  await setDoc(
+    userRef,
+    {
       lastLoginAt: serverTimestamp(),
-      loginCount: 1,
-    });
-  } else {
-    await setDoc(
-      userRef,
-      {
-        lastLoginAt: serverTimestamp(),
-        loginCount: increment(1),
-      },
-      { merge: true }
-    );
-  }
+      loginCount: increment(1),
+    },
+    { merge: true }
+  );
 }
 
 /* ── Provider ──────────────────────────────── */
@@ -103,11 +113,48 @@ async function ensureUserProfile(firebaseUser: User, isSignUp: boolean = false):
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [profileVerified, setProfileVerified] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Ref to skip onAuthStateChanged profile check during active login/signup flows.
+  // The explicit handlers manage their own Firestore checks and state.
+  const skipAutoVerifyRef = useRef(false);
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // If an explicit login/signup handler is running, let it manage state.
+        // Don't do a competing Firestore check here.
+        if (skipAutoVerifyRef.current) {
+          setUser(firebaseUser);
+          setLoading(false);
+          return;
+        }
+
+        // For automatic re-auth (page refresh, returning user):
+        // Verify the user has a Firestore profile before marking them as verified.
+        try {
+          const exists = await checkProfileExists(firebaseUser.uid);
+          if (exists) {
+            setUser(firebaseUser);
+            setProfileVerified(true);
+          } else {
+            // Ghost user (Firebase Auth exists but no Firestore profile).
+            // Sign them out silently.
+            await firebaseSignOut(auth);
+            setUser(null);
+            setProfileVerified(false);
+          }
+        } catch {
+          // Firestore check failed (network, permissions, etc.)
+          // Keep the user signed in but unverified
+          setUser(firebaseUser);
+          setProfileVerified(false);
+        }
+      } else {
+        setUser(null);
+        setProfileVerified(false);
+      }
       setLoading(false);
     });
     return unsubscribe;
@@ -117,24 +164,78 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInWithGoogle = useCallback(async (isSignUp: boolean = false) => {
     try {
       setError(null);
+      skipAutoVerifyRef.current = true; // Prevent onAuthStateChanged from racing
+
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      
-      try {
-        await ensureUserProfile(result.user, isSignUp);
-      } catch (profileErr) {
-        await firebaseSignOut(auth);
-        throw profileErr;
-      }
-      
-      try {
-        await createSessionCookie(result.user);
-      } catch (sessionErr) {
-        // If server session fails, revert client auth
-        await firebaseSignOut(auth);
-        throw sessionErr;
+      const firebaseUser = result.user;
+
+      // Check if Firestore profile exists
+      const profileExists = await checkProfileExists(firebaseUser.uid);
+
+      if (isSignUp) {
+        // ── SIGNUP flow ──
+        if (profileExists) {
+          // User already has an account — don't create duplicate
+          await firebaseSignOut(auth);
+          skipAutoVerifyRef.current = false;
+          throw new Error("account-exists");
+        }
+
+        // Create the Firestore profile
+        await createUserProfile(firebaseUser, "google", firebaseUser.photoURL || "");
+
+        // Create session cookie
+        try {
+          await createSessionCookie(firebaseUser);
+        } catch (sessionErr) {
+          await firebaseSignOut(auth);
+          skipAutoVerifyRef.current = false;
+          throw sessionErr;
+        }
+
+        // Everything succeeded — mark as verified
+        setUser(firebaseUser);
+        setProfileVerified(true);
+        skipAutoVerifyRef.current = false;
+
+      } else {
+        // ── LOGIN flow ──
+        if (!profileExists) {
+          // No Firestore profile = user never signed up.
+          // Delete the auto-created Firebase Auth user to prevent ghost accounts,
+          // then throw.
+          try {
+            await deleteUser(firebaseUser);
+          } catch {
+            // If delete fails (e.g. requires re-auth), just sign out
+            await firebaseSignOut(auth);
+          }
+          setUser(null);
+          setProfileVerified(false);
+          skipAutoVerifyRef.current = false;
+          throw new Error("account-not-found");
+        }
+
+        // Profile exists — track the login
+        await trackLogin(firebaseUser.uid);
+
+        // Create session cookie
+        try {
+          await createSessionCookie(firebaseUser);
+        } catch (sessionErr) {
+          await firebaseSignOut(auth);
+          skipAutoVerifyRef.current = false;
+          throw sessionErr;
+        }
+
+        // Everything succeeded — mark as verified
+        setUser(firebaseUser);
+        setProfileVerified(true);
+        skipAutoVerifyRef.current = false;
       }
     } catch (err) {
+      skipAutoVerifyRef.current = false;
       const msg = err instanceof Error ? err.message : "Google sign-in failed";
       if (!msg.includes("popup-closed-by-user")) {
         setError(msg);
@@ -148,28 +249,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (email: string, password: string) => {
       try {
         setError(null);
+        skipAutoVerifyRef.current = true;
 
-        // Check if user exists in Firestore
+        // Check if user exists in Firestore BEFORE attempting Firebase Auth sign-in
         const usersRef = collection(db, "users");
         const q = query(usersRef, where("email", "==", email));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
+          skipAutoVerifyRef.current = false;
           throw new Error("account-not-found");
         }
 
         const result = await signInWithEmailAndPassword(auth, email, password);
         
-        // Track the login in Firestore
-        await ensureUserProfile(result.user, false);
+        // Track the login
+        await trackLogin(result.user.uid);
         
+        // Create session cookie
         try {
           await createSessionCookie(result.user);
         } catch (sessionErr) {
           await firebaseSignOut(auth);
+          skipAutoVerifyRef.current = false;
           throw sessionErr;
         }
+
+        // Everything succeeded
+        setUser(result.user);
+        setProfileVerified(true);
+        skipAutoVerifyRef.current = false;
       } catch (err) {
+        skipAutoVerifyRef.current = false;
         const msg = err instanceof Error ? err.message : "Sign-in failed";
         setError(msg);
         throw err;
@@ -183,17 +294,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (name: string, email: string, password: string) => {
       try {
         setError(null);
+        skipAutoVerifyRef.current = true;
+
         const result = await createUserWithEmailAndPassword(auth, email, password);
 
         // Set display name on the Firebase Auth user
         await updateProfile(result.user, { displayName: name });
 
         // Create Firestore profile
-        await ensureUserProfile(result.user, true);
+        await createUserProfile(result.user, "email", "");
+
+        // Send email verification
+        await sendEmailVerification(result.user);
 
         // Sign out immediately because email signup requires manual login
         await firebaseSignOut(auth);
+        setUser(null);
+        setProfileVerified(false);
+        skipAutoVerifyRef.current = false;
       } catch (err) {
+        skipAutoVerifyRef.current = false;
         const msg = err instanceof Error ? err.message : "Sign-up failed";
         setError(msg);
         throw err;
@@ -206,6 +326,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const resetPassword = useCallback(async (email: string) => {
     try {
       setError(null);
+      
+      // Check if user exists first to prevent silent failures when
+      // email enumeration protection is enabled on Firebase
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("email", "==", email));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        throw new Error("user-not-found");
+      }
+
+      const docData = querySnapshot.docs[0].data();
+      if (docData.provider === "google") {
+        throw new Error("google-provider");
+      }
+      
       await sendPasswordResetEmail(auth, email);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Password reset failed";
@@ -219,6 +355,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setError(null);
       await firebaseSignOut(auth);
+      setProfileVerified(false);
       await fetch("/api/auth/session", { method: "DELETE" });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Sign-out failed";
@@ -229,6 +366,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthContextType = {
     user,
     loading,
+    profileVerified,
     error,
     signInWithGoogle,
     signInWithEmail,

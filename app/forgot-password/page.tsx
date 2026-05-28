@@ -29,6 +29,8 @@ export default function ForgotPasswordPage() {
         setError("Please enter a valid email address.");
       } else if (msg.includes("too-many-requests")) {
         setError("Too many attempts. Please try again later.");
+      } else if (msg.includes("google-provider")) {
+        setError("This email uses Google sign-in. Please log in with Google instead.");
       } else {
         setError("Something went wrong. Please try again.");
       }

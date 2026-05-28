@@ -49,11 +49,23 @@ export interface UserProfile {
   email: string;
   displayName: string;
 
-  /** The user's subscription plan — controls feature access and rate limits */
-  plan: 'free' | 'pro';
+  /** Authentication provider used ('email' or 'google') */
+  provider: 'email' | 'google';
 
-  /** How many validations the user has run this calendar month */
-  validationsThisMonth: number;
+  /** User role for authorization */
+  role: string;
+
+  /** URL to user's avatar image, empty string if none */
+  avatar: string;
+
+  /** The user's subscription plan — controls feature access and rate limits */
+  plan: 'free' | 'pro' | 'elite' | 'visionary';
+
+  /** How many validations the user has run TODAY */
+  validationsToday: number;
+
+  /** The date string (YYYY-MM-DD) of their last validation for resetting daily limits */
+  lastValidationDate?: string;
 
   /** Razorpay payment ID — only set after user completes Razorpay checkout */
   razorpayCustomerId?: string;
@@ -129,8 +141,42 @@ export interface ValidationResult {
     analysis: string;
   };
 
+  /** Scalability and growth potential (NEW) */
+  scalability: {
+    score: number;
+    analysis: string;
+  };
+
+  /** Specific niches, underserved audiences, and pivots to keep user optimistic (NEW) */
+  opportunities: {
+    analysis: string;
+    list: string[];
+  };
+
+  /** Investor-style summary of the business model and execution (NEW) */
+  startupArchetype: {
+    type: string;
+    difficulty: 'Low' | 'Medium' | 'Medium-High' | 'High' | 'Extreme';
+    timeToMvp: string;
+    monetizationPotential: 'Weak' | 'Moderate' | 'Strong' | 'Very Strong';
+  };
+
   /** One-paragraph summary: should the user pursue this idea? */
   recommendation: string;
+
+  /** Human-readable explanation of why the AI gave this score */
+  whyThisScore?: string;
+
+  /** Actionable pivot/niche suggestions to make the idea stronger */
+  pivotSuggestions?: string[];
+
+  /** SWOT Analysis - exclusively available for visionary/elite plans */
+  swotAnalysis?: {
+    strengths: string[];
+    weaknesses: string[];
+    opportunities: string[];
+    threats: string[];
+  };
 
   /** Concrete, actionable next steps the founder should take */
   nextSteps: string[];

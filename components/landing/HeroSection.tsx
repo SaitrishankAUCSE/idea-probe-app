@@ -24,7 +24,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Radar, ArrowRight, Sparkles, Zap, Shield } from "lucide-react";
 
+import { useAuth } from "@/lib/auth-context";
+
 export function HeroSection() {
+  const { user } = useAuth();
   /* --- Typing Animation ---
      We cycle through different idea descriptions to show
      the breadth of what IdeaProbe can analyze.
@@ -44,7 +47,7 @@ export function HeroSection() {
 
   // Mount animation trigger
   useEffect(() => {
-    setMounted(true);
+    setTimeout(() => setMounted(true), 0);
   }, []);
 
   // Typing effect — characters appear one by one
@@ -70,11 +73,11 @@ export function HeroSection() {
         return () => clearTimeout(timer);
       } else {
         // Finished deleting — move to next idea
-        setCurrentIdea((prev) => (prev + 1) % ideas.length);
-        setIsTyping(true);
+        setTimeout(() => setCurrentIdea((prev) => (prev + 1) % ideas.length), 0);
+        setTimeout(() => setIsTyping(true), 0);
       }
     }
-  }, [displayText, isTyping, currentIdea]);
+  }, [displayText, isTyping, currentIdea, ideas]);
 
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center px-4 sm:px-6 lg:px-8">
@@ -112,10 +115,10 @@ export function HeroSection() {
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
-                href="/signup"
+                href={user ? "/validate" : "/signup"}
                 className="group inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl gradient-primary text-white font-semibold text-lg transition-all duration-300 hover:shadow-[0_0_30px_rgba(19,106,183,0.4)] hover:scale-[1.02] active:scale-[0.98]"
               >
-                Try for Free
+                {user ? "Validate an Idea" : "Try for Free"}
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link

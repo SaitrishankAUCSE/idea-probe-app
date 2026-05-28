@@ -179,7 +179,7 @@ export default function PricingPage() {
             body: JSON.stringify(response),
           });
           if (verifyRes.ok) {
-            router.push("/dashboard?upgraded=true");
+            router.push("/validate?upgraded=true");
           } else {
             alert("Payment verification failed. Please contact support@ideaprobe.io.");
           }

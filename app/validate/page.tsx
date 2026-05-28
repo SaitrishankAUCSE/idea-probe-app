@@ -28,7 +28,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import { AuthGuard } from "@/components/AuthGuard";
 import { AILoadingAnimation } from "@/components/AILoadingAnimation";
@@ -40,6 +41,8 @@ import {
   Loader2,
   Zap,
   CheckCircle2,
+  Lock,
+  Crown,
 } from "lucide-react";
 
 /* Helpful tips that rotate — teach users how to write better prompts */
@@ -53,7 +56,11 @@ const tips = [
 
 export default function ValidatePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
+
+  const isUpgraded = searchParams.get("upgraded") === "true";
+  const [showUpgradeSuccess, setShowUpgradeSuccess] = useState(isUpgraded);
 
   const [idea, setIdea] = useState("");
   const [isValidating, setIsValidating] = useState(false);
@@ -64,6 +71,17 @@ export default function ValidatePage() {
     used: 0,
     limit: 3 as number | "Unlimited",
   });
+
+  /* Auto-hide upgrade success */
+  useEffect(() => {
+    if (showUpgradeSuccess) {
+      const timeout = setTimeout(() => {
+        setShowUpgradeSuccess(false);
+        router.replace("/validate");
+      }, 4000);
+      return () => clearTimeout(timeout);
+    }
+  }, [showUpgradeSuccess, router]);
 
   /* Pre-fill templates */
   const templates = [
@@ -159,6 +177,62 @@ export default function ValidatePage() {
 
   return (
     <AuthGuard>
+      {/* Upgrade Success Animation */}
+      <AnimatePresence>
+        {showUpgradeSuccess && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[300] flex items-center justify-center bg-black/90 backdrop-blur-2xl"
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 1.1, opacity: 0 }}
+              transition={{ type: "spring", damping: 20, stiffness: 200 }}
+              className="text-center relative p-8"
+            >
+              {/* Glowing Orb Backdrop */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <motion.div 
+                  animate={{ scale: [1, 2, 3], opacity: [1, 0.5, 0] }}
+                  transition={{ duration: 1.5, ease: "easeOut" }}
+                  className="w-40 h-40 rounded-full bg-success/40 blur-3xl absolute" 
+                />
+              </div>
+
+              <motion.div 
+                initial={{ y: 50, scale: 0.5 }}
+                animate={{ y: 0, scale: 1 }}
+                transition={{ type: "spring", damping: 15, stiffness: 300 }}
+                className="w-24 h-24 mx-auto bg-gradient-to-br from-success to-emerald-400 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(16,185,129,0.5)] relative z-10"
+              >
+                <Crown className="w-12 h-12 text-white" />
+              </motion.div>
+              
+              <motion.h2 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-4xl md:text-5xl font-bold mb-4 gradient-text-success relative z-10"
+              >
+                Upgrade Successful!
+              </motion.h2>
+              
+              <motion.p 
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-xl text-foreground-secondary max-w-md mx-auto relative z-10"
+              >
+                Your account is now upgraded. Welcome to the elite tier of startup founders.
+              </motion.p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Loading screen overlay — shows premium animation while AI analyzes */}
       <AILoadingAnimation isVisible={isValidating} />
 
@@ -242,6 +316,34 @@ export default function ValidatePage() {
                 ))}
               </div>
             </div>
+
+            {/* Limit Reached Warning Banner */}
+            <AnimatePresence>
+              {usageInfo.plan === "free" && typeof usageInfo.limit === "number" && usageInfo.used >= usageInfo.limit && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  animate={{ opacity: 1, height: "auto", marginBottom: 24 }}
+                  exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="glass-light rounded-xl p-5 border border-warning/30 bg-warning/10 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                    <div className="w-12 h-12 rounded-full bg-warning/20 flex items-center justify-center flex-shrink-0">
+                      <Lock className="w-6 h-6 text-warning" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-warning font-bold text-lg mb-1">Free Limit Reached</h3>
+                      <p className="text-foreground-secondary text-sm">
+                        You&apos;ve used all {usageInfo.limit} of your free validations for today. Upgrade your plan to continue validating ideas and get deep AI analysis.
+                      </p>
+                    </div>
+                    <a href="/pricing" className="flex-shrink-0 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-warning text-black font-bold text-sm shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:scale-[1.02] transition-transform">
+                      <Zap className="w-4 h-4" />
+                      Upgrade to Pro
+                    </a>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Textarea */}
             <div className="relative">

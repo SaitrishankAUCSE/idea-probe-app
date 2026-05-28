@@ -218,7 +218,8 @@ INSTRUCTIONS:
 1. Conduct extensive web research. Find 3-5 REAL competitors. Find REAL market size numbers.
 2. Mentally apply a critical Chain of Thought: Why will this fail? Who is already doing this? How much does it cost to acquire a customer?
 3. Compute the overallScore strictly using this weighted formula: (marketSize*0.25 + competition*0.15 + riskAssessment*0.15 + feasibility*0.20 + uniqueness*0.10 + scalability*0.15) * 10. Round to the nearest integer.
-4. Output the final result as a clean, valid JSON object matching the requested schema exactly. Do NOT wrap it in markdown formatting or add conversational filler. Just the raw JSON.`;
+4. Output the final result as a clean, valid JSON object matching the requested schema exactly. Do NOT wrap it in markdown formatting or add conversational filler. Just the raw JSON:
+${JSON.stringify(validationSchema, null, 2)}`;
 
   const config = {
     systemInstruction: systemPrompt,

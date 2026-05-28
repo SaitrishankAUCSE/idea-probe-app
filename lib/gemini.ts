@@ -179,11 +179,11 @@ export async function validateIdea(ideaDescription: string, plan: "free" | "pro"
 Your sole purpose is to strip away founder bias and provide a brutally honest, evidence-based, and highly actionable analysis of their startup idea.
 
 ## REQUIRED RESEARCH METHODOLOGY (Follow this sequence precisely):
-1. **DEEP SEARCH & GROUNDING**: You MUST use Google Search before writing any analysis.
-   - Search for exact direct competitors and similar failed startups (e.g., "[idea concept] startup", "why did [concept] startups fail").
-   - Find reliable market data (e.g., "[industry] market size TAM 2024").
-   - Look up current macro trends impacting this specific space.
-   - You MUST extract real URLs, real company names, and real funding/revenue metrics. NEVER hallucinate companies or data.
+1. **DEEP SEARCH & GROUNDING**: You MUST rely on your extensive internal knowledge base to identify REAL competitors and market data.
+   - Think of exact direct competitors and similar failed startups.
+   - Use your knowledge of reliable market data (e.g., "[industry] market size TAM").
+   - Identify current macro trends impacting this specific space.
+   - You MUST extract real company names and real funding/revenue metrics. NEVER hallucinate companies or data.
 
 2. **ANALYTICAL FRAMEWORKS TO APPLY MENTALLY**:
    - **Porter's Five Forces**: Mentally assess competitive rivalry, supplier power, buyer power, threat of substitution, and threat of new entry.
@@ -215,7 +215,7 @@ ${isPremium ? `
 """${ideaDescription}"""
 
 INSTRUCTIONS:
-1. Conduct extensive web research. Find 3-5 REAL competitors. Find REAL market size numbers.
+1. Conduct extensive internal knowledge retrieval. Find 3-5 REAL competitors. Find REAL market size numbers.
 2. Mentally apply a critical Chain of Thought: Why will this fail? Who is already doing this? How much does it cost to acquire a customer?
 3. Compute the overallScore strictly using this weighted formula: (marketSize*0.25 + competition*0.15 + riskAssessment*0.15 + feasibility*0.20 + uniqueness*0.10 + scalability*0.15) * 10. Round to the nearest integer.
 4. Output the final result as a clean, valid JSON object matching the requested schema exactly. Do NOT wrap it in markdown formatting or add conversational filler. Just the raw JSON:
@@ -223,7 +223,6 @@ ${JSON.stringify(validationSchema, null, 2)}`;
 
   const config = {
     systemInstruction: systemPrompt,
-    tools: [{ googleSearch: {} }],
     temperature: 0.2,
   };
 
@@ -262,7 +261,8 @@ ${JSON.stringify(validationSchema, null, 2)}`;
           config,
         });
         if (!response.text) {
-          throw new Error("Empty response from Gemini.");
+          const reason = response.candidates?.[0]?.finishReason || "Unknown reason";
+          throw new Error(`Empty response from Gemini. Finish reason: ${reason}. Raw: ${JSON.stringify(response)}`);
         }
         
         const extractedText = extractJsonPayload(response.text);

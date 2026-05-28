@@ -230,7 +230,7 @@ ${JSON.stringify(validationSchema, null, 2)}`;
   function extractJsonPayload(text: string): string {
     const trimmed = text.trim();
 
-    const fencedMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```$/i);
+    const fencedMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
     if (fencedMatch?.[1]) {
       return fencedMatch[1].trim();
     }
@@ -252,7 +252,7 @@ ${JSON.stringify(validationSchema, null, 2)}`;
   }
 
   // Retry helper with exponential backoff
-  async function callWithRetry(modelName: string, maxRetries: number = 3): Promise<string> {
+  async function callWithRetry(modelName: string, maxRetries: number = 3): Promise<ValidationResult> {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         ensureApiKey();
@@ -264,15 +264,22 @@ ${JSON.stringify(validationSchema, null, 2)}`;
         if (!response.text) {
           throw new Error("Empty response from Gemini.");
         }
-        return response.text;
+        
+        const extractedText = extractJsonPayload(response.text);
+        try {
+          return JSON.parse(extractedText) as ValidationResult;
+        } catch (parseErr: unknown) {
+          console.error(`[IdeaProbe] JSON parse failed on attempt ${attempt + 1}:`, (parseErr as Error).message);
+          throw new Error(`JSON_PARSE_FAILED: ${(parseErr as Error).message}`);
+        }
       } catch (err: unknown) {
         const errMsg = err instanceof Error ? err.message : String(err);
-        const isRetryable = errMsg.includes("503") || errMsg.includes("UNAVAILABLE") || errMsg.includes("high demand") || errMsg.includes("overloaded");
+        const isNetworkRetryable = errMsg.includes("503") || errMsg.includes("UNAVAILABLE") || errMsg.includes("high demand") || errMsg.includes("overloaded");
+        const isParseRetryable = errMsg.includes("JSON_PARSE_FAILED");
 
-        if (isRetryable && attempt < maxRetries) {
-          // Exponential backoff: 2s, 4s, 8s
-          const delay = Math.pow(2, attempt + 1) * 1000;
-          console.warn(`[IdeaProbe] Gemini ${modelName} attempt ${attempt + 1} failed (503). Retrying in ${delay / 1000}s...`);
+        if ((isNetworkRetryable || isParseRetryable) && attempt < maxRetries) {
+          const delay = isParseRetryable ? 1000 : Math.pow(2, attempt + 1) * 1000;
+          console.warn(`[IdeaProbe] Gemini ${modelName} attempt ${attempt + 1} failed (${isParseRetryable ? "Parse Error" : "Network Error"}). Retrying in ${delay / 1000}s...`);
           await new Promise(resolve => setTimeout(resolve, delay));
           continue;
         }
@@ -283,27 +290,14 @@ ${JSON.stringify(validationSchema, null, 2)}`;
   }
 
   // Try primary model first, then fallback if it keeps failing
-  let rawText: string;
   try {
-    rawText = await callWithRetry(primaryModel);
+    return await callWithRetry(primaryModel);
   } catch (primaryErr) {
     if (primaryModel !== fallbackModel) {
       console.warn(`[IdeaProbe] Primary model ${primaryModel} failed. Falling back to ${fallbackModel}...`);
-      rawText = await callWithRetry(fallbackModel);
+      return await callWithRetry(fallbackModel);
     } else {
       throw primaryErr;
     }
-  }
-
-  const extractedText = extractJsonPayload(rawText);
-  try {
-    return JSON.parse(extractedText) as ValidationResult;
-  } catch (err: unknown) {
-    const errMsg = err instanceof Error ? err.message : String(err);
-    console.error("JSON PARSE ERROR:", errMsg);
-    console.error("RAW TEXT:", rawText);
-    throw new Error(
-      `JSON_PARSE_FAILED: ${errMsg}`
-    );
   }
 }

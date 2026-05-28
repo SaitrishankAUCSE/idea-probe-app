@@ -131,8 +131,8 @@ export async function canValidate(userId: string, email: string = ""): Promise<b
   // Elite/Visionary users get unlimited
   if (profile.plan === "elite" || profile.plan === "visionary") return true;
 
-  // Pro users get 10 per day
-  if (profile.plan === "pro") return currentUsage < 10;
+  // Pro users get 50 per day
+  if (profile.plan === "pro") return currentUsage < 50;
   
   // Free users get 3 per day
   return currentUsage < 3;

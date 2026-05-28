@@ -52,7 +52,7 @@ const plans = [
     annualPeriod: "/mo, billed annually",
     description: "For serious founders building real products",
     features: [
-      "10 validations per day",
+      "50 validations per day",
       "Deep web search",
       "Full PDF report",
       "CSV competitor/risk export",
@@ -63,11 +63,11 @@ const plans = [
   },
   {
     name: "Visionary",
-    price: "₹2,499",
-    annualPrice: "₹1,999",
-    period: "/month",
-    annualPeriod: "/mo, billed annually",
-    description: "For power users launching multiple projects",
+    price: "₹24,999",
+    annualPrice: "₹19,999",
+    period: "/year",
+    annualPeriod: "/yr, billed annually",
+    description: "Yearly membership for power users",
     features: [
       "Unlimited validations",
       "Advanced Reasoning AI (Gemini 2.5 Pro)",

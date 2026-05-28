@@ -127,7 +127,7 @@ function ValidateContent() {
       return;
     }
 
-    if (usageInfo.plan === "free" && typeof usageInfo.limit === "number" && usageInfo.used >= usageInfo.limit) {
+    if ((usageInfo.plan === "free" || usageInfo.plan === "pro") && typeof usageInfo.limit === "number" && usageInfo.used >= usageInfo.limit) {
       router.push("/pricing");
       return;
     }
@@ -147,9 +147,11 @@ function ValidateContent() {
       if (!response.ok) {
         const data = await response.json();
         if (response.status === 429) {
-          setError(
-            "You've used all your free validations this month. Upgrade to Pro for unlimited access."
-          );
+          if (usageInfo.plan === "pro") {
+            setError("You've reached your Pro limit of 50 validations per day. Upgrade to Visionary for unlimited access.");
+          } else {
+            setError("You've reached your Free limit of 3 validations per day. Upgrade to Pro for 50 per day, or Visionary for unlimited.");
+          }
         } else {
           setError(data.error || "Something went wrong. Please try again.");
         }
@@ -319,7 +321,7 @@ function ValidateContent() {
 
             {/* Limit Reached Warning Banner */}
             <AnimatePresence>
-              {usageInfo.plan === "free" && typeof usageInfo.limit === "number" && usageInfo.used >= usageInfo.limit && (
+              {(usageInfo.plan === "free" || usageInfo.plan === "pro") && typeof usageInfo.limit === "number" && usageInfo.used >= usageInfo.limit && (
                 <motion.div 
                   initial={{ opacity: 0, height: 0, marginBottom: 0 }}
                   animate={{ opacity: 1, height: "auto", marginBottom: 24 }}
@@ -331,14 +333,14 @@ function ValidateContent() {
                       <Lock className="w-6 h-6 text-warning" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-warning font-bold text-lg mb-1">Free Limit Reached</h3>
+                      <h3 className="text-warning font-bold text-lg mb-1">{usageInfo.plan === "free" ? "Free" : "Pro"} Limit Reached</h3>
                       <p className="text-foreground-secondary text-sm">
-                        You&apos;ve used all {usageInfo.limit} of your free validations for today. Upgrade your plan to continue validating ideas and get deep AI analysis.
+                        You&apos;ve used all {usageInfo.limit} of your {usageInfo.plan === "free" ? "free" : "Pro"} validations for today. Upgrade your plan to continue validating ideas and get deep AI analysis.
                       </p>
                     </div>
                     <a href="/pricing" className="flex-shrink-0 w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-warning text-black font-bold text-sm shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:scale-[1.02] transition-transform">
                       <Zap className="w-4 h-4" />
-                      Upgrade to Pro
+                      Upgrade to {usageInfo.plan === "free" ? "Pro" : "Visionary"}
                     </a>
                   </div>
                 </motion.div>

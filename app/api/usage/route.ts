@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       plan: effectivePlan,
       used: currentUsage,
-      limit: isUnlimited ? "Unlimited" : (effectivePlan === "pro" ? 10 : 3),
+      limit: isUnlimited ? "Unlimited" : (effectivePlan === "pro" ? 50 : 3),
     });
   } catch (error) {
     console.error("Usage API error:", error);

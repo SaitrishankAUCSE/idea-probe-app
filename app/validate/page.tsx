@@ -27,7 +27,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
@@ -54,7 +54,7 @@ const tips = [
   "Mention the market or industry you're targeting",
 ];
 
-export default function ValidatePage() {
+function ValidateContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
@@ -434,5 +434,18 @@ export default function ValidatePage() {
         </div>
       </div>
     </AuthGuard>
+  );
+}
+
+export default function ValidatePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+        <p className="text-foreground-secondary text-sm">Loading validation engine...</p>
+      </div>
+    }>
+      <ValidateContent />
+    </Suspense>
   );
 }

@@ -22,14 +22,15 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Check usage limits
-    const isAllowed = await canValidate(userId);
+    const userEmail = decodedToken.email || "";
+    const isAllowed = await canValidate(userId, userEmail);
     if (!isAllowed) {
       return NextResponse.json({ error: "Usage limit exceeded" }, { status: 429 });
     }
 
     // Fetch profile to get plan — VIP emails override to visionary
     const profile = await getUserProfile(userId);
-    const effectivePlan = isVipEmail(profile?.email || "") ? "visionary" : (profile?.plan || "free");
+    const effectivePlan = isVipEmail(userEmail) ? "visionary" : (profile?.plan || "free");
 
     // 4. Call Gemini AI (this takes ~10-20s due to web search)
     const result = await validateIdea(idea, effectivePlan);

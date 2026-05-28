@@ -22,7 +22,8 @@ export async function GET(req: NextRequest) {
     const currentUsage = isNewDay ? 0 : (profile.validationsToday || 0);
 
     // VIP emails always get visionary tier
-    const effectivePlan = isVipEmail(profile.email) ? "visionary" : (profile.plan || "free");
+    const userEmail = decoded.email || "";
+    const effectivePlan = isVipEmail(userEmail) ? "visionary" : (profile.plan || "free");
     const isUnlimited = effectivePlan === "elite" || effectivePlan === "visionary";
 
     return NextResponse.json({

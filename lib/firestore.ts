@@ -105,12 +105,12 @@ export async function incrementUsage(userId: string): Promise<void> {
   });
 }
 
-export async function canValidate(userId: string): Promise<boolean> {
+export async function canValidate(userId: string, email: string = ""): Promise<boolean> {
   const profile = await getUserProfile(userId);
   if (!profile) return false;
   
   // VIP emails always get unlimited
-  if (isVipEmail(profile.email)) return true;
+  if (isVipEmail(email)) return true;
 
   const today = new Date().toISOString().split("T")[0];
   const isNewDay = profile.lastValidationDate !== today;

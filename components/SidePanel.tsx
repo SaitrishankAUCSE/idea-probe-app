@@ -88,14 +88,14 @@ export function SidePanel({ isOpen, onClose, userPlan = "free" }: SidePanelProps
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 bottom-0 z-[101] w-[320px] max-w-[85vw] bg-[#0a0a0a] border-l border-border shadow-2xl flex flex-col"
+            className="fixed right-0 top-0 bottom-0 z-[101] w-[320px] max-w-[85vw] bg-background/95 backdrop-blur-xl border-l border-border shadow-[0_0_40px_rgba(0,0,0,0.1)] flex flex-col"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-border">
               <h2 className="font-semibold text-lg">Account</h2>
               <button
                 onClick={onClose}
-                className="p-2 rounded-lg text-foreground-secondary hover:text-foreground hover:bg-white/5 transition-colors"
+                className="p-2 rounded-lg text-foreground-secondary hover:text-foreground hover:bg-foreground/5 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -149,7 +149,7 @@ export function SidePanel({ isOpen, onClose, userPlan = "free" }: SidePanelProps
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 group ${
                       isActive
                         ? "bg-primary/10 text-primary"
-                        : "text-foreground-secondary hover:text-foreground hover:bg-white/5"
+                        : "text-foreground-secondary hover:text-foreground hover:bg-foreground/5"
                     }`}
                   >
                     <item.icon className={`w-4.5 h-4.5 ${isActive ? "text-primary" : ""}`} />
@@ -164,7 +164,7 @@ export function SidePanel({ isOpen, onClose, userPlan = "free" }: SidePanelProps
             <div className="p-4 border-t border-border space-y-2">
               <button
                 onClick={handleSignOut}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-foreground-secondary hover:text-foreground hover:bg-white/5 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-foreground-secondary hover:text-foreground hover:bg-foreground/5 transition-colors"
               >
                 <LogOut className="w-4.5 h-4.5" />
                 Sign Out
@@ -197,7 +197,7 @@ export function SidePanel({ isOpen, onClose, userPlan = "free" }: SidePanelProps
                     </button>
                     <button
                       onClick={() => setShowDeleteConfirm(false)}
-                      className="flex-1 py-2 px-3 rounded-lg glass text-sm font-medium hover:bg-white/10 transition-colors"
+                      className="flex-1 py-2 px-3 rounded-lg border border-border text-sm font-medium hover:bg-foreground/5 transition-colors"
                     >
                       Cancel
                     </button>

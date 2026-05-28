@@ -63,14 +63,14 @@ export default function DashboardPage() {
     <AuthGuard>
       <div className="min-h-[85vh] px-4 py-8 sm:py-12 relative overflow-hidden">
         {/* Abstract Background Elements */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -z-10 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[100px] -z-10 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-accent/10 rounded-full blur-[120px] -z-10 pointer-events-none" />
 
         <div className="max-w-5xl mx-auto">
           {/* Header Banner */}
-          <div className="mb-10 relative overflow-hidden rounded-3xl p-8 sm:p-10 border border-white/10 shadow-2xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-background-secondary via-background to-primary/10 -z-10" />
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[80px] -z-10" />
+          <div className="mb-10 relative overflow-hidden rounded-3xl p-8 sm:p-10 border border-border shadow-xl bg-background-secondary/50">
+            <div className="absolute inset-0 bg-gradient-to-br from-background-secondary via-background to-primary/5 -z-10" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/15 rounded-full blur-[80px] -z-10" />
             
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
               <div>
@@ -159,7 +159,8 @@ export default function DashboardPage() {
                     
                     <div className="grid sm:grid-cols-2 gap-6">
                       {/* Plan Info */}
-                      <div className="bg-background-secondary rounded-2xl p-5 border border-border flex flex-col justify-between">
+                      <div className="bg-gradient-to-br from-background to-background-secondary/50 rounded-2xl p-5 border border-border shadow-sm flex flex-col justify-between relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -z-10" />
                         <div>
                           <div className="text-sm font-medium text-foreground-tertiary mb-1">Current Plan</div>
                           <div className="text-2xl font-bold capitalize flex items-center gap-2">
@@ -173,10 +174,10 @@ export default function DashboardPage() {
                           </p>
                         </div>
                         
-                        {!isPro && (
+                        {!isPro && !isVisionary && (
                           <Link
                             href="/pricing"
-                            className="mt-5 inline-flex items-center justify-center w-full py-2.5 rounded-lg gradient-primary text-white text-sm font-bold hover:shadow-[0_0_15px_rgba(19,106,183,0.3)] transition-all group"
+                            className="mt-5 inline-flex items-center justify-center w-full py-2.5 rounded-lg gradient-primary text-white text-sm font-bold shadow-[0_4px_14px_0_rgba(22,163,74,0.39)] hover:shadow-[0_6px_20px_rgba(22,163,74,0.23)] hover:-translate-y-0.5 transition-all group"
                           >
                             Upgrade to Pro
                             <ArrowRight className="w-4 h-4 ml-1.5 group-hover:translate-x-1 transition-transform" />
@@ -185,12 +186,13 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Usage Info */}
-                      <div className="bg-background-secondary rounded-2xl p-5 border border-border">
+                      <div className="bg-gradient-to-br from-background to-background-secondary/50 rounded-2xl p-5 border border-border shadow-sm relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-24 h-24 bg-accent/5 rounded-full blur-2xl -z-10" />
                         <div className="text-sm font-medium text-foreground-tertiary mb-4">Monthly Validations</div>
                         
-                        {isPro ? (
+                        {isPro || isVisionary ? (
                           <div className="flex flex-col items-center justify-center h-full pb-4">
-                            <div className="w-20 h-20 rounded-full border-4 border-primary/20 flex items-center justify-center mb-3">
+                            <div className="w-20 h-20 rounded-full border-4 border-primary/20 flex items-center justify-center mb-3 bg-background">
                               <span className="text-3xl font-bold text-primary">∞</span>
                             </div>
                             <span className="text-foreground-secondary font-medium">Unlimited Access</span>

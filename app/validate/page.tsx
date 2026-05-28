@@ -60,10 +60,17 @@ export default function ValidatePage() {
   const [error, setError] = useState("");
   const [currentTip, setCurrentTip] = useState(0);
   const [usageInfo, setUsageInfo] = useState({
-    plan: "free" as "free" | "pro" | "elite",
+    plan: "free" as "free" | "pro" | "elite" | "visionary",
     used: 0,
     limit: 3 as number | "Unlimited",
   });
+
+  /* Pre-fill templates */
+  const templates = [
+    { label: "B2B SaaS", text: "A B2B SaaS platform that helps [target customer] solve [specific problem] by [core feature]. We will monetize through [pricing model] and our main differentiator is [unique advantage]." },
+    { label: "Marketplace", text: "A two-sided marketplace connecting [supply side] with [demand side]. The core problem we solve is [friction in current market]. We take a [%] take rate on GMV. Our initial GTM strategy focuses on [specific niche]." },
+    { label: "AI Tool", text: "An AI-powered tool that automates [workflow] for [target user]. It integrates with [existing tools] and uses [specific data/model] to achieve [outcome]. Target pricing is [price]/mo." },
+  ];
 
   /* Rotate tips every 4 seconds */
   useEffect(() => {
@@ -177,13 +184,13 @@ export default function ValidatePage() {
             {/* Usage counter */}
             <div className="flex items-center justify-between mb-4">
               <div className="absolute top-4 right-4 text-sm font-medium">
-                {usageInfo.plan === "elite" ? (
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary">
+                {usageInfo.plan === "visionary" || usageInfo.plan === "elite" ? (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-primary-light">
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>Elite: Unlimited</span>
+                    <span>Unlimited Validations</span>
                   </div>
                 ) : usageInfo.plan === "pro" ? (
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/20 border border-primary/30 text-primary-light">
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Pro: {usageInfo.used}/{usageInfo.limit} used today</span>
                   </div>
@@ -215,16 +222,32 @@ export default function ValidatePage() {
                 )}
             </div>
 
+            {/* Template Chips */}
+            <div className="mb-4">
+              <div className="text-xs text-foreground-tertiary mb-2 font-medium uppercase tracking-wider">Start with a template</div>
+              <div className="flex flex-wrap gap-2">
+                {templates.map((tpl) => (
+                  <button
+                    key={tpl.label}
+                    onClick={() => setIdea(tpl.text)}
+                    className="text-xs px-3 py-1.5 rounded-full bg-background-secondary border border-white/5 hover:border-primary/50 hover:text-primary-light transition-colors"
+                  >
+                    {tpl.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Textarea */}
             <div className="relative">
               <textarea
                 value={idea}
                 onChange={(e) => setIdea(e.target.value)}
-                placeholder="Example: A mobile app that helps remote workers find and book co-working spaces near them, with real-time availability and community features. Target market is freelancers and remote employees in urban areas. Revenue model is a commission on bookings plus a premium subscription for workspace owners."
+                placeholder="Example: A mobile app that helps remote workers find and book co-working spaces near them..."
                 rows={8}
                 maxLength={2000}
                 disabled={isValidating}
-                className="w-full p-4 rounded-xl bg-background border border-border text-foreground placeholder:text-foreground-tertiary/60 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-all resize-none text-base leading-relaxed disabled:opacity-50"
+                className="w-full p-5 rounded-xl bg-background/50 border border-white/10 text-foreground placeholder:text-foreground-tertiary/40 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all resize-none text-base leading-relaxed disabled:opacity-50 shadow-inner"
               />
 
               {/* Character counter */}
@@ -263,11 +286,11 @@ export default function ValidatePage() {
               disabled={
                 isValidating ||
                 !idea.trim() ||
-                (usageInfo.plan !== "elite" &&
+                (usageInfo.plan === "free" &&
                   typeof usageInfo.limit === "number" &&
                   usageInfo.used >= usageInfo.limit)
               }
-              className="w-full mt-6 py-4 rounded-xl gradient-primary text-white font-bold text-lg transition-all duration-300 hover:shadow-[0_0_30px_rgba(19,106,183,0.4)] hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none flex items-center justify-center gap-3"
+              className="w-full mt-6 py-4 rounded-xl bg-primary hover:bg-primary-light text-white font-bold text-lg transition-all duration-300 shadow-[0_0_30px_rgba(59,130,246,0.2)] hover:shadow-[0_0_50px_rgba(59,130,246,0.4)] hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none flex items-center justify-center gap-3"
             >
               {isValidating ? (
                 <>

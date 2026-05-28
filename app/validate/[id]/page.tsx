@@ -8,6 +8,8 @@ import { ScoreCard } from "@/components/ScoreCard";
 import { DimensionBar } from "@/components/DimensionBar";
 import { CompetitorCard } from "@/components/CompetitorCard";
 import { RiskCard } from "@/components/RiskCard";
+import { RadarChart } from "@/components/charts/RadarChart";
+import { ScoreGauge } from "@/components/charts/ScoreGauge";
 import type { ValidationDoc } from "@/types";
 import {
   Loader2,
@@ -27,14 +29,7 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 import Link from "next/link";
-import {
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  ResponsiveContainer,
-} from "recharts";
+
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { motion, Variants } from "framer-motion";
@@ -295,42 +290,27 @@ export default function ResultsPage({
                 </div>
               </motion.div>
 
-              {/* Overall Score + Archetype */}
+              {/* Overall Score + Radar Chart */}
               <motion.div variants={itemVariants} className="grid md:grid-cols-2 gap-6">
-                <div className="glass rounded-2xl p-8 flex flex-col items-center justify-center">
-                  <ScoreCard
-                    score={validation.result.overallScore}
-                    label="Overall Score"
-                    size="lg"
-                  />
-                  <p className="mt-4 text-foreground-secondary text-center max-w-[250px] text-sm">
+                <div className="glass-light rounded-2xl p-8 flex flex-col items-center justify-center border border-white/5 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-full h-full bg-primary/5 -z-10" />
+                  <h3 className="font-semibold text-foreground-secondary mb-8 uppercase tracking-widest text-sm">Overall Viability</h3>
+                  <ScoreGauge score={validation.result.overallScore} size={200} />
+                  
+                  <p className="mt-8 text-foreground-secondary text-center max-w-[280px] text-sm leading-relaxed">
                     {validation.result.whyThisScore || (validation.result.overallScore >= 70
-                      ? "This idea shows strong potential. The fundamentals are solid."
+                      ? "This idea shows strong potential. The fundamentals are solid and the market timing looks good."
                       : validation.result.overallScore >= 40
-                      ? "This idea has promise but faces significant challenges."
-                      : "This idea faces major headwinds. Consider pivoting.")}
+                      ? "This idea has promise but faces significant challenges. Consider pivoting."
+                      : "This idea faces major headwinds. It's highly recommended to rethink the core premise.")}
                   </p>
                 </div>
                 
                 {/* Radar Chart */}
-                <div className="glass rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center min-h-[300px]">
-                  <h3 className="font-semibold text-foreground-secondary mb-2">Analysis Radar</h3>
-                  <div className="w-full h-[250px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart cx="50%" cy="50%" outerRadius="80%" data={prepareChartData()}>
-                        <PolarGrid stroke="var(--border)" />
-                        <PolarAngleAxis dataKey="subject" tick={{ fill: 'var(--foreground-secondary)', fontSize: 12 }} />
-                        <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                        <Radar
-                          name="Score"
-                          dataKey="A"
-                          stroke="var(--primary)"
-                          fill="var(--primary)"
-                          fillOpacity={0.4}
-                        />
-                      </RadarChart>
-                    </ResponsiveContainer>
-                  </div>
+                <div className="glass-light rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center min-h-[350px] border border-white/5 relative">
+                  <div className="absolute bottom-0 left-0 w-full h-full bg-accent/5 -z-10" />
+                  <h3 className="font-semibold text-foreground-secondary mb-4 uppercase tracking-widest text-sm">Analysis Radar</h3>
+                  <RadarChart data={prepareChartData()} />
                 </div>
               </motion.div>
 

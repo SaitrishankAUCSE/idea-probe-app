@@ -94,10 +94,10 @@ export function AILoadingAnimation({ isVisible }: AILoadingAnimationProps) {
                     rotate: [0, 180, 360],
                   }}
                   transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  className="relative w-24 h-24 rounded-full border-2 border-primary/50 flex items-center justify-center"
+                  className="relative w-24 h-24 rounded-full border-2 border-primary/40 flex items-center justify-center"
                   style={{
-                    background: "radial-gradient(circle at 30% 30%, rgba(22, 163, 74, 0.3), rgba(22, 163, 74, 0.05))",
-                    boxShadow: "0 0 60px rgba(22, 163, 74, 0.3), inset 0 0 40px rgba(22, 163, 74, 0.1)",
+                    background: "radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.05))",
+                    boxShadow: "0 0 60px rgba(59, 130, 246, 0.4), inset 0 0 40px rgba(139, 92, 246, 0.2)",
                   }}
                 >
                   <motion.div
@@ -120,9 +120,9 @@ export function AILoadingAnimation({ isVisible }: AILoadingAnimationProps) {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
               className="text-2xl font-bold text-center mb-2 bg-clip-text text-transparent"
-              style={{ backgroundImage: "linear-gradient(135deg, #fff 0%, rgba(22, 163, 74, 0.9) 100%)" }}
+              style={{ backgroundImage: "linear-gradient(135deg, #fff 0%, rgba(96, 165, 250, 0.9) 100%)" }}
             >
-              Analyzing Your Idea
+              Building Intelligence Report
             </motion.h2>
             <motion.p
               initial={{ y: 10, opacity: 0 }}
@@ -140,8 +140,8 @@ export function AILoadingAnimation({ isVisible }: AILoadingAnimationProps) {
                   className="h-full rounded-full"
                   style={{
                     width: `${progress}%`,
-                    background: "linear-gradient(90deg, #16a34a, #4ade80)",
-                    boxShadow: "0 0 20px rgba(22, 163, 74, 0.5)",
+                    background: "linear-gradient(90deg, #3B82F6, #8B5CF6)",
+                    boxShadow: "0 0 20px rgba(59, 130, 246, 0.5)",
                   }}
                   transition={{ duration: 0.3 }}
                 />

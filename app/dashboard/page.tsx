@@ -16,6 +16,7 @@ import {
   Activity
 } from "lucide-react";
 import Link from "next/link";
+import { IdeaBoard } from "@/components/workspace/IdeaBoard";
 
 export default function DashboardPage() {
   const { user, signOut } = useAuth();
@@ -102,15 +103,15 @@ export default function DashboardPage() {
                 
                 <div className="flex flex-col items-center text-center">
                   <div className="relative">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-5 border-4 border-background-secondary shadow-lg">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center mb-5 border border-primary/30 shadow-[0_0_20px_rgba(59,130,246,0.3)]">
                       {user?.photoURL ? (
                         <img src={user.photoURL} alt="Avatar" className="w-full h-full rounded-full object-cover" />
                       ) : (
-                        <User className="w-12 h-12 text-primary" />
+                        <User className="w-12 h-12 text-primary-light" />
                       )}
                     </div>
                     {isPro && (
-                      <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-yellow-400 to-amber-600 text-white p-1.5 rounded-full border-2 border-background shadow-md">
+                      <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-yellow-400 to-amber-600 text-white p-1.5 rounded-full border border-background shadow-md">
                         <Crown className="w-4 h-4" />
                       </div>
                     )}
@@ -119,14 +120,14 @@ export default function DashboardPage() {
                   <h2 className="text-2xl font-bold">{user?.displayName || "Unknown User"}</h2>
                   <p className="text-foreground-secondary mb-2">{user?.email}</p>
                   
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-background-secondary text-xs font-medium text-foreground-tertiary mb-8">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-background-secondary border border-white/5 text-xs font-medium text-foreground-tertiary mb-8">
                     <Settings className="w-3.5 h-3.5" />
                     Account Settings
                   </div>
                   
                   <button
                     onClick={signOut}
-                    className="w-full py-3 rounded-xl border border-danger/20 text-danger hover:bg-danger hover:text-white transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-sm hover:shadow-danger/25"
+                    className="w-full py-3 rounded-xl border border-danger/20 text-danger hover:bg-danger/10 transition-all duration-300 flex items-center justify-center gap-2 font-semibold shadow-sm"
                   >
                     <LogOut className="w-4 h-4" />
                     Sign Out
@@ -232,63 +233,9 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  {/* Recent Validations Card */}
-                  <div className="glass rounded-3xl p-8">
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2.5 rounded-xl bg-accent/10 text-accent">
-                          <History className="w-5 h-5" />
-                        </div>
-                        <h3 className="text-xl font-bold">Recent Validations</h3>
-                      </div>
-                      
-                      {recentHistory.length > 0 && (
-                        <Link href="/history" className="text-sm font-semibold text-primary hover:text-primary-light transition-colors flex items-center">
-                          View All <ArrowRight className="w-4 h-4 ml-1" />
-                        </Link>
-                      )}
-                    </div>
-                    
-                    {recentHistory.length === 0 ? (
-                      <div className="text-center py-10 bg-background-secondary rounded-2xl border border-border border-dashed">
-                        <div className="w-16 h-16 bg-background rounded-full flex items-center justify-center mx-auto mb-4 border border-border shadow-sm">
-                          <Zap className="w-6 h-6 text-foreground-tertiary" />
-                        </div>
-                        <h4 className="text-foreground font-semibold mb-1">No validations yet</h4>
-                        <p className="text-foreground-secondary text-sm mb-4">Start your first idea validation to see it here.</p>
-                        <Link href="/validate" className="inline-flex items-center text-sm font-semibold text-primary hover:underline">
-                          Validate an Idea →
-                        </Link>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        {recentHistory.map((item: any) => (
-                          <Link 
-                            key={item.id} 
-                            href={`/validate/${item.id}`}
-                            className="block p-4 rounded-2xl bg-background-secondary border border-border hover:border-primary/40 hover:bg-background-secondary/80 transition-all group"
-                          >
-                            <div className="flex justify-between items-start gap-4">
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                                  {item.idea || "Untitled Idea"}
-                                </h4>
-                                <p className="text-xs text-foreground-tertiary mt-1">
-                                  {new Date(item.createdAt).toLocaleDateString(undefined, { 
-                                    month: 'short', day: 'numeric', year: 'numeric' 
-                                  })}
-                                </p>
-                              </div>
-                              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-background border border-border group-hover:scale-110 transition-transform shadow-sm">
-                                <ArrowRight className="w-4 h-4 text-foreground-secondary group-hover:text-primary transition-colors" />
-                              </div>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  {/* Founder Workspace / IdeaBoard */}
+                  <IdeaBoard validations={recentHistory} />
+
                 </>
               )}
             </div>

@@ -19,8 +19,10 @@
 
 import Link from "next/link";
 import { HeroSection } from "@/components/landing/HeroSection";
+import { StatsSection } from "@/components/landing/StatsSection";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { FeaturesGrid } from "@/components/landing/FeaturesGrid";
+import { Testimonials } from "@/components/landing/Testimonials";
 import { PricingPreview } from "@/components/landing/PricingPreview";
 import { FinalCTA } from "@/components/landing/FinalCTA";
 
@@ -43,11 +45,17 @@ export default function LandingPage() {
       {/* Hero Section */}
       <HeroSection />
 
+      {/* Trust Counters */}
+      <StatsSection />
+
       {/* How It Works — 3 steps */}
       <HowItWorks />
 
       {/* Features Grid */}
       <FeaturesGrid />
+
+      {/* Testimonials */}
+      <Testimonials />
 
       {/* Pricing Preview */}
       <PricingPreview />

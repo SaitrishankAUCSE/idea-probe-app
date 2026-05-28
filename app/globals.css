@@ -1,32 +1,38 @@
 @import "tailwindcss";
 
 :root {
-  --primary: #16A34A;           /* Green 600 */
-  --primary-light: #22C55E;     /* Green 500 */
-  --primary-dark: #15803D;      /* Green 700 */
+  /* Premium Dark Theme Core */
+  --background: #0A0A0A;
+  --background-secondary: #121212;
+  --background-tertiary: #1A1A1A;
   
-  --accent: #059669;            /* Emerald 600 */
+  --foreground: #FFFFFF;
+  --foreground-secondary: #A1A1AA;
+  --foreground-tertiary: #71717A;
   
-  --success: #16A34A;
-  --danger: #DC2626;
+  --border: #27272A;
+  --border-hover: #3F3F46;
+
+  /* AI Glowing Accents (Vercel/Linear style) */
+  --primary: #3B82F6;           /* Electric Blue */
+  --primary-light: #60A5FA;
+  --primary-dark: #2563EB;
+  
+  --accent: #8B5CF6;            /* Neon Purple */
+  
+  /* Status Colors */
+  --success: #10B981;
+  --danger: #EF4444;
   --warning: #F59E0B;
   
-  --background: #FFFFFF;
-  --background-secondary: #F9FAFB;
-  --background-tertiary: #F3F4F6;
+  /* Premium Glass Effects */
+  --glass-bg: rgba(10, 10, 10, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
   
-  --foreground: #111827;
-  --foreground-secondary: #6B7280;
-  --foreground-tertiary: #9CA3AF;
-  
-  --border: #E5E7EB;
-  --border-hover: #D1D5DB;
-  
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.08);
-  --glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  
-  --glow-primary: 0 0 20px rgba(22, 163, 74, 0.2);
+  /* Glowing Orbs */
+  --glow-primary: 0 0 40px rgba(59, 130, 246, 0.3);
+  --glow-accent: 0 0 40px rgba(139, 92, 246, 0.3);
 }
 
 @theme inline {
@@ -35,7 +41,7 @@
   --color-primary-dark: var(--primary-dark);
   --color-accent: var(--accent);
   --color-success: var(--success);
-  --color-success-dark: #15803D;
+  --color-success-dark: #047857;
   --color-danger: var(--danger);
   --color-danger-dark: #B91C1C;
   --color-warning: var(--warning);
@@ -95,10 +101,10 @@ body {
 }
 
 .glass-light {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(26, 26, 26, 0.6);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .gradient-text {
@@ -124,6 +130,12 @@ body {
 }
 
 .glow-primary { box-shadow: var(--glow-primary); }
+.glow-accent { box-shadow: var(--glow-accent); }
+.glow-orb {
+  background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+  filter: blur(60px);
+  opacity: 0.15;
+}
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--background); }

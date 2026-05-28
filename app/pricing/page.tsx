@@ -244,13 +244,13 @@ export default function PricingPage() {
               key={plan.name}
               className={`relative glass rounded-3xl p-8 sm:p-10 transition-all duration-300 flex flex-col justify-between ${
                 plan.popular
-                  ? "border-primary/45 ring-1 ring-primary/25 shadow-[0_0_40px_rgba(22,163,74,0.12)] lg:scale-105 z-10"
-                  : "border-border"
+                  ? "border-primary/50 ring-1 ring-primary/30 shadow-[0_0_50px_rgba(59,130,246,0.15)] lg:scale-105 z-10 bg-primary/5"
+                  : "border-white/10"
               }`}
             >
               <div>
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full gradient-primary text-white text-sm font-bold flex items-center gap-1.5 shadow-lg">
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-primary text-white text-sm font-bold flex items-center gap-1.5 shadow-[0_0_20px_rgba(59,130,246,0.4)]">
                     <Sparkles className="w-4 h-4" />
                     Most Popular
                   </div>
@@ -288,8 +288,8 @@ export default function PricingPage() {
                 disabled={loadingPlan !== null}
                 className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 ${
                   plan.popular
-                    ? "gradient-primary text-white hover:shadow-[0_0_30px_rgba(22,163,74,0.4)] hover:scale-[1.02]"
-                    : "glass text-foreground hover:bg-border-hover hover:scale-[1.01]"
+                    ? "bg-primary hover:bg-primary-light text-white shadow-[0_0_30px_rgba(59,130,246,0.2)] hover:shadow-[0_0_40px_rgba(59,130,246,0.4)] hover:scale-[1.02]"
+                    : "glass-light text-foreground border border-white/10 hover:bg-white/10 hover:border-white/20 hover:scale-[1.01]"
                 }`}
               >
                 {loadingPlan === plan.priceId ? (
@@ -309,10 +309,10 @@ export default function PricingPage() {
           </h2>
           <div className="space-y-6">
             {faqs.map((faq, i) => (
-              <div key={i} className="glass rounded-2xl p-6 sm:p-8 flex gap-4 items-start">
+              <div key={i} className="glass-light rounded-2xl p-6 sm:p-8 flex gap-4 items-start border border-white/5">
                 <HelpCircle className="w-6 h-6 text-primary flex-shrink-0 mt-1" />
                 <div>
-                  <h3 className="font-semibold text-lg mb-2">{faq.q}</h3>
+                  <h3 className="font-semibold text-lg mb-2 text-foreground">{faq.q}</h3>
                   <p className="text-foreground-secondary leading-relaxed">
                     {faq.a}
                   </p>

@@ -225,8 +225,6 @@ ${JSON.stringify(validationSchema, null, 2)}`;
     systemInstruction: systemPrompt,
     tools: [{ googleSearch: {} }],
     temperature: 0.2,
-    responseMimeType: "application/json",
-    responseSchema: validationSchema,
   };
 
   function extractJsonPayload(text: string): string {

@@ -15,6 +15,7 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -26,6 +27,12 @@ function LoginForm() {
       
       if (user) signOut();
       setError("Your session expired. Please sign in again.");
+    } else if (searchParams.get("registered") === "true") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("registered");
+      window.history.replaceState({}, document.title, url.toString());
+      
+      setSuccessMsg("Account created successfully! Please log in to continue.");
     } else if (user && !loading && !isSubmitting) {
       router.push("/validate");
     }
@@ -41,10 +48,10 @@ function LoginForm() {
       router.push("/validate");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Login failed";
-      if (msg.includes("wrong-password") || msg.includes("invalid-credential")) {
-        setError("Incorrect email or password.");
-      } else if (msg.includes("user-not-found")) {
+      if (msg.includes("account-not-found") || msg.includes("user-not-found")) {
         setError("No account found with this email. Please sign up first.");
+      } else if (msg.includes("wrong-password") || msg.includes("invalid-credential")) {
+        setError("Incorrect email or password.");
       } else if (msg.includes("too-many-requests")) {
         setError("Too many failed attempts. Try again later.");
       } else {
@@ -195,6 +202,13 @@ function LoginForm() {
             {error && (
               <div className="text-sm text-danger bg-danger/10 px-4 py-2.5 rounded-lg">
                 {error}
+              </div>
+            )}
+
+            {/* Success */}
+            {successMsg && (
+              <div className="text-sm text-success bg-success/10 px-4 py-2.5 rounded-lg border border-success/20">
+                {successMsg}
               </div>
             )}
 

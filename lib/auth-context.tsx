@@ -22,7 +22,7 @@ import {
   type User,
 } from "firebase/auth";
 
-import { doc, setDoc, getDoc, serverTimestamp, increment } from "firebase/firestore";
+import { doc, setDoc, getDoc, serverTimestamp, increment, collection, query, where, getDocs } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 
 /* ── Types ─────────────────────────────────── */
@@ -64,11 +64,14 @@ async function createSessionCookie(user: User): Promise<void> {
 }
 
 /* ── Helper: create Firestore profile and track login ──────── */
-async function ensureUserProfile(firebaseUser: User): Promise<void> {
+async function ensureUserProfile(firebaseUser: User, isSignUp: boolean = false): Promise<void> {
   const userRef = doc(db, "users", firebaseUser.uid);
   const userSnap = await getDoc(userRef);
 
   if (!userSnap.exists()) {
+    if (!isSignUp) {
+      throw new Error("account-not-found");
+    }
     await setDoc(userRef, {
       uid: firebaseUser.uid,
       email: firebaseUser.email,
@@ -117,7 +120,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       
-      await ensureUserProfile(result.user);
+      try {
+        await ensureUserProfile(result.user, isSignUp);
+      } catch (profileErr) {
+        await firebaseSignOut(auth);
+        throw profileErr;
+      }
       
       try {
         await createSessionCookie(result.user);
@@ -140,10 +148,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (email: string, password: string) => {
       try {
         setError(null);
+
+        // Check if user exists in Firestore
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("email", "==", email));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+          throw new Error("account-not-found");
+        }
+
         const result = await signInWithEmailAndPassword(auth, email, password);
         
         // Track the login in Firestore
-        await ensureUserProfile(result.user);
+        await ensureUserProfile(result.user, false);
         
         try {
           await createSessionCookie(result.user);
@@ -171,15 +189,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await updateProfile(result.user, { displayName: name });
 
         // Create Firestore profile
-        await ensureUserProfile(result.user);
+        await ensureUserProfile(result.user, true);
 
-        // Create session cookie
-        try {
-          await createSessionCookie(result.user);
-        } catch (sessionErr) {
-          await firebaseSignOut(auth);
-          throw sessionErr;
-        }
+        // Sign out immediately because email signup requires manual login
+        await firebaseSignOut(auth);
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Sign-up failed";
         setError(msg);

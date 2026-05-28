@@ -44,7 +44,7 @@ function SignupForm() {
     setIsSubmitting(true);
     try {
       await signUpWithEmail(name, email, password);
-      router.push("/validate");
+      router.push("/login?registered=true");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Signup failed";
       if (msg.includes("email-already-in-use")) {

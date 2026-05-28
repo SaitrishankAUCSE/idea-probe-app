@@ -63,9 +63,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (errorMessage.includes("Missing Gemini API key")) {
+    if (errorMessage.includes("Missing Gemini API key") || errorMessage.includes("API key not valid")) {
       return NextResponse.json(
-        { error: "AI API key is not configured. Please contact support or try again later." },
+        { error: "Your Gemini API Key is invalid or expired. Please update it in your environment variables." },
         { status: 500 }
       );
     }

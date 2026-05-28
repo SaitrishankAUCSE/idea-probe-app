@@ -3,6 +3,7 @@ import type { UserProfile, ValidationResult, ValidationDoc } from "@/types";
 
 /** VIP accounts that always get Visionary-tier access regardless of Firestore plan */
 const VIP_EMAILS = [
+  "saitrishankb@gmail.com",
   "saitrishankb9@gmail.com",
   "bannusai899@gmail.com",
   "saitrishankb1311@gmail.com",

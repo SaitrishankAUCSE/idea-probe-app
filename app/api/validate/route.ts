@@ -44,8 +44,27 @@ export async function POST(req: NextRequest) {
   } catch (error: unknown) {
     console.error("Validation error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    
+    // Detect overload/rate-limit errors and give a friendly message
+    const isOverloaded = errorMessage.includes("503") || errorMessage.includes("UNAVAILABLE") || errorMessage.includes("high demand") || errorMessage.includes("overloaded");
+    const isRateLimit = errorMessage.includes("429") || errorMessage.includes("RATE") || errorMessage.includes("quota");
+    
+    if (isOverloaded) {
+      return NextResponse.json(
+        { error: "Our AI engine is experiencing high demand right now. Please wait 30 seconds and try again — your idea is worth the wait!" },
+        { status: 503 }
+      );
+    }
+    
+    if (isRateLimit) {
+      return NextResponse.json(
+        { error: "We've hit our API rate limit. Please try again in a minute." },
+        { status: 429 }
+      );
+    }
+    
     return NextResponse.json(
-      { error: `Failed to validate idea. (${errorMessage})` },
+      { error: "Something went wrong during analysis. Please try again." },
       { status: 500 }
     );
   }

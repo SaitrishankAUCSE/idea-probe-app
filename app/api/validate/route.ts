@@ -3,6 +3,8 @@ import { adminAuth } from "@/lib/firebase-admin";
 import { validateIdea } from "@/lib/gemini";
 import { saveValidation, canValidate, incrementUsage, getUserProfile, isVipEmail } from "@/lib/firestore";
 
+export const maxDuration = 60;
+
 export async function POST(req: NextRequest) {
   try {
     // 1. Authenticate the request

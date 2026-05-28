@@ -171,7 +171,7 @@ export async function validateIdea(ideaDescription: string, plan: "free" | "pro"
     required: requiredFields
   };
 
-  const primaryModel = isPremium ? "gemini-2.5-pro" : "gemini-2.5-flash";
+  const primaryModel = "gemini-2.5-flash";
   const fallbackModel = "gemini-2.5-flash"; // Always available as a safety net
 
   const systemPrompt = `You are IdeaProbe — an elite, hyper-critical startup validation engine trusted by Tier-1 VCs (Sequoia, YC, a16z). You combine the rigorous, MECE (Mutually Exclusive, Collectively Exhaustive) analytical frameworks of a McKinsey consultant with the ruthless pattern recognition of a Y Combinator partner who has evaluated 20,000+ pitches. 

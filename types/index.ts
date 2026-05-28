@@ -67,8 +67,32 @@ export interface UserProfile {
   /** The date string (YYYY-MM-DD) of their last validation for resetting daily limits */
   lastValidationDate?: string;
 
+  /** Total lifetime validations */
+  totalValidations?: number;
+
   /** Razorpay payment ID — only set after user completes Razorpay checkout */
   razorpayCustomerId?: string;
+
+  /** Last payment ID for reference */
+  lastPaymentId?: string;
+
+  /** Last order ID for reference */
+  lastPaymentOrderId?: string;
+
+  /** ISO string of when the user upgraded their plan */
+  upgradedAt?: string;
+
+  /** How the user signed up */
+  signupMethod?: 'email' | 'google';
+
+  /** ISO string of signup date */
+  signupDate?: string;
+
+  /** When the user last logged in */
+  lastLoginAt?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+  /** Total number of logins */
+  loginCount?: number;
 
   /**
    * Firestore Timestamp — typed as `any` because:

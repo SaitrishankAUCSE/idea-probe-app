@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth } from "@/lib/firebase-admin";
 import { validateIdea } from "@/lib/gemini";
-import { saveValidation, canValidate, incrementUsage, getUserProfile, isVipEmail } from "@/lib/firestore";
+import { saveValidation, canValidate, incrementUsage, getUserProfile, isVipEmail, updateUserProfile } from "@/lib/firestore";
 
 export const maxDuration = 60;
 
@@ -14,6 +14,8 @@ export async function POST(req: NextRequest) {
     }
     const decodedToken = await adminAuth.verifySessionCookie(session, true);
     const userId = decodedToken.uid;
+    const userEmail = (decodedToken.email || "").toLowerCase();
+    const isVip = isVipEmail(userEmail);
 
     // 2. Parse request body
     const { idea } = await req.json();
@@ -21,27 +23,44 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid idea description" }, { status: 400 });
     }
 
-    // 3. Check usage limits
-    const userEmail = decodedToken.email || "";
-    const isAllowed = await canValidate(userId, userEmail);
-    if (!isAllowed) {
-      return NextResponse.json({ error: "Usage limit exceeded" }, { status: 429 });
+    // 3. Check usage limits — VIP users always pass
+    if (!isVip) {
+      const isAllowed = await canValidate(userId, userEmail);
+      if (!isAllowed) {
+        return NextResponse.json({ error: "Usage limit exceeded" }, { status: 429 });
+      }
     }
 
-    // Fetch profile to get plan — VIP emails override to visionary
-    const profile = await getUserProfile(userId);
-    const effectivePlan = isVipEmail(userEmail) ? "visionary" : (profile?.plan || "free");
+    // 4. Determine effective plan
+    let effectivePlan: "free" | "pro" | "elite" | "visionary" = "free";
+    if (isVip) {
+      effectivePlan = "visionary";
+      // Auto-provision VIP profile if needed
+      const profile = await getUserProfile(userId);
+      if (!profile || profile.plan !== "visionary") {
+        await updateUserProfile(userId, {
+          email: userEmail,
+          plan: "visionary",
+          displayName: decodedToken.name || "VIP User",
+        });
+      }
+    } else {
+      const profile = await getUserProfile(userId);
+      effectivePlan = (profile?.plan || "free") as typeof effectivePlan;
+    }
 
-    // 4. Call Gemini AI (this takes ~10-20s due to web search)
+    // 5. Call Gemini AI
     const result = await validateIdea(idea, effectivePlan);
 
-    // 5. Save the result to Firestore
+    // 6. Save the result to Firestore
     const validationId = await saveValidation(userId, idea, result);
 
-    // 6. Increment user's usage counter
-    await incrementUsage(userId);
+    // 7. Increment user's usage counter (non-VIP only)
+    if (!isVip) {
+      await incrementUsage(userId);
+    }
 
-    // 7. Return success response with ID so client can redirect
+    // 8. Return success response with ID so client can redirect
     return NextResponse.json({ success: true, validationId });
     
   } catch (error: unknown) {
@@ -86,4 +105,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

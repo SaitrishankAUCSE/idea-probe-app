@@ -96,15 +96,39 @@ export async function POST(request: NextRequest) {
     const plan = (order as { notes?: { plan?: string } }).notes?.plan || "pro";
 
     // --------------------------------------------------
-    // Step 5: Upgrade user to the correct plan
+    // Step 5: Upgrade user to the correct plan and save payment details
     // --------------------------------------------------
+    const validPlans = ["pro", "elite", "visionary"];
+    const effectivePlan = validPlans.includes(plan) ? plan : "pro";
+
+    const { FieldValue } = await import("firebase-admin/firestore");
+
+    // Update user profile with new plan
     await adminDb
       .collection("users")
       .doc(userId)
-      .update({
-        plan: plan === "elite" ? "elite" : "pro",
+      .set({
+        plan: effectivePlan,
         razorpayCustomerId: razorpay_payment_id,
-        updatedAt: new Date(),
+        lastPaymentId: razorpay_payment_id,
+        lastPaymentOrderId: razorpay_order_id,
+        upgradedAt: new Date().toISOString(),
+        updatedAt: FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+    // Save payment record to payments subcollection for history
+    await adminDb
+      .collection("users")
+      .doc(userId)
+      .collection("payments")
+      .add({
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        plan: effectivePlan,
+        amount: (order as { amount?: number }).amount || 0,
+        currency: (order as { currency?: string }).currency || "INR",
+        status: "verified",
+        createdAt: new Date().toISOString(),
       });
 
     return NextResponse.json({ success: true });

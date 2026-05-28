@@ -94,14 +94,25 @@ export async function getValidation(
 
 export async function incrementUsage(userId: string): Promise<void> {
   const profile = await getUserProfile(userId);
-  if (!profile) return;
   
   const today = new Date().toISOString().split("T")[0];
+  
+  if (!profile) {
+    // Auto-provision minimal profile if missing
+    await updateUserProfile(userId, {
+      validationsToday: 1,
+      lastValidationDate: today,
+      totalValidations: 1,
+    });
+    return;
+  }
+  
   const isNewDay = profile.lastValidationDate !== today;
   
   await updateUserProfile(userId, {
     validationsToday: isNewDay ? 1 : (profile.validationsToday || 0) + 1,
     lastValidationDate: today,
+    totalValidations: (profile.totalValidations || 0) + 1,
   });
 }
 

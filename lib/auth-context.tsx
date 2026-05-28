@@ -78,7 +78,7 @@ async function createUserProfile(firebaseUser: User, provider: 'email' | 'google
   const userRef = doc(db, "users", firebaseUser.uid);
   await setDoc(userRef, {
     uid: firebaseUser.uid,
-    email: firebaseUser.email,
+    email: (firebaseUser.email || "").toLowerCase(),
     displayName:
       firebaseUser.displayName ||
       firebaseUser.email?.split("@")[0] ||
@@ -87,11 +87,16 @@ async function createUserProfile(firebaseUser: User, provider: 'email' | 'google
     role: "user",
     avatar,
     plan: "free",
+    validationsToday: 0,
+    lastValidationDate: "",
     validationsThisMonth: 0,
+    totalValidations: 0,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     lastLoginAt: serverTimestamp(),
     loginCount: 1,
+    signupMethod: provider,
+    signupDate: new Date().toISOString(),
   });
 }
 
